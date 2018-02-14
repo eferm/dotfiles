@@ -21,7 +21,7 @@ export SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
 #############################
 
 export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
-export REQUESTS_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
+export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE
 export JAVA_HOME=$JAVA_HOME_9
 export PIP_FORMAT=columns
 
