@@ -1,19 +1,21 @@
 #!/bin/bash
 
-DIR="/Users/eferm/Dropbox/code/dotfiles"
-
 #############################
-# CUSTOM VARIABLES
+# LOCAL VARIABLES
 #############################
 
-export JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
-export JAVA_HOME_9=$(/usr/libexec/java_home -v9)
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # https://stackoverflow.com/q/59895
 
-export PYTHON_BREW=/usr/local/opt/python/libexec/bin
-export PYTHON_CONDA_2=/usr/local/miniconda2/bin
-export PYTHON_CONDA_3=/usr/local/miniconda3/bin
+RESET_PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
 
-export SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
+JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
+JAVA_HOME_9=$(/usr/libexec/java_home -v9)
+
+PYTHON_BREW=/usr/local/opt/python/libexec/bin
+PYTHON_CONDA_2=/usr/local/miniconda2/bin
+PYTHON_CONDA_3=/usr/local/miniconda3/bin
+
+SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
 
 
 #############################
@@ -24,8 +26,6 @@ export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
 export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE
 export JAVA_HOME=$JAVA_HOME_9
 export PIP_FORMAT=columns
-
-export RESET_PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$PYTHON_CONDA_3:$RESET_PATH
 
 
@@ -75,6 +75,7 @@ cp $DIR/ssh/config ~/.ssh/config
 # python
 mkdir -p ~/.pip
 cp $DIR/pip/pip.conf ~/.pip/pip.conf
+
 
 #############################
 # EXECUTE COMMANDS
