@@ -37,6 +37,7 @@ export PATH=$PYTHON_CONDA_3:$RESET_PATH_BREW
 alias b='cd ..'
 alias bb='cd ../..'
 alias bbb='cd ../../..'
+alias bbbb='cd ../../../..'
 alias ls='ls -AGh'
 alias ll='ls -AlGh' # -AlGrth
 alias rm='rm -f'
