@@ -43,7 +43,7 @@ alias ll='ls -AlGh' # -AlGrth
 alias rm='rm -f'
 alias google='ping -c 5 google.com'
 alias word='sed `perl -e "print int rand(99999)"`"q;d" /usr/share/dict/words'
-alias sshkeygen='ssh-keygen -t rsa -b 4096 -C "gemore@gmail.com"'
+alias sshkeygen='ssh-keygen -t rsa -b 4096 -C'
 
 # brew
 alias brew_on='export PATH=$RESET_PATH_BREW'
