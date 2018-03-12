@@ -7,7 +7,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # https://stackoverflow.com/q/59895
 
 RESET_PATH=/usr/bin:/usr/sbin:/bin:/sbin
-RESET_PATH_BREW=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin
+RESET_PATH_BREW=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
 
 JAVA_HOME_9=$(/usr/libexec/java_home -v9)
 JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
