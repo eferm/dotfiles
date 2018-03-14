@@ -13,6 +13,7 @@ JAVA_HOME_9=$(/usr/libexec/java_home -v9)
 JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
 
 PYTHON_BREW_2=/usr/local/opt/python@2/bin
+PYTHON_BREW_3=/usr/local/opt/python/libexec/bin
 
 PYTHON_CONDA_3=/usr/local/miniconda3/bin
 PYTHON_CONDA_2=/usr/local/miniconda2/bin
@@ -54,7 +55,7 @@ alias java_9='export JAVA_HOME=$JAVA_HOME_9'
 alias java_8='export JAVA_HOME=$JAVA_HOME_8'
 
 # python
-alias python_brew_3='export PATH=$RESET_PATH_BREW'
+alias python_brew_3='export PATH=$PYTHON_BREW_3:$RESET_PATH_BREW'
 alias python_brew_2='export PATH=$PYTHON_BREW_2:$RESET_PATH_BREW'
 alias python_conda_3='export PATH=$PYTHON_CONDA_3:$RESET_PATH_BREW'
 alias python_conda_2='export PATH=$PYTHON_CONDA_2:$RESET_PATH_BREW'
