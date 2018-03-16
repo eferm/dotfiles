@@ -1,0 +1,8 @@
+brew "cloc"
+brew "git"
+brew "postgresql"
+cask "atom"
+cask "github"
+cask "mactex"
+cask "postgres"
+cask "sublime-text"
