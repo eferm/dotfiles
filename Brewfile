@@ -7,7 +7,7 @@ brew "coreutils"
 brew "direnv"
 brew "git"
 brew "python"
-brew "python@2"
+brew "python@2", link: false
 brew "tree"
 cask "caffeine"
 cask "java"
