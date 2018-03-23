@@ -6,6 +6,7 @@ brew "archey"
 brew "coreutils"
 brew "direnv"
 brew "git"
+brew "go"
 brew "python"
 brew "python@2", link: false
 brew "tree"
