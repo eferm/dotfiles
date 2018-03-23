@@ -27,12 +27,11 @@ SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
 export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
 export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE
 export JAVA_HOME=$JAVA_HOME_9
-export GOROOT=/usr/local/opt/go/libexec
-export GOPATH=$GOROOT/bin
+export GOPATH=$HOME/go
 
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$BREWPATH:$PATH # include homebrew
-export PATH=$GOPATH/bin:$GOROOT/bin:$PATH # include go
+export PATH=$GOPATH/bin:$PATH # include go
 PATH_DEFAULT_PYTHON=$PATH # used later for switching python dist
 export PATH=$PYTHON_CONDA_3:$PATH # include preferred python
 
