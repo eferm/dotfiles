@@ -8,6 +8,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # https://stackoverflow.
 
 BREWPATH=/usr/local/bin:/usr/local/sbin
 
+JAVA_HOME_10=$(/usr/libexec/java_home -v10)
 JAVA_HOME_9=$(/usr/libexec/java_home -v9)
 JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
 
@@ -26,7 +27,7 @@ SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
 
 export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
 export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE
-export JAVA_HOME=$JAVA_HOME_9
+export JAVA_HOME=$JAVA_HOME_10
 export GOPATH=$HOME/go
 
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
@@ -52,6 +53,7 @@ alias word='sed `perl -e "print int rand(99999)"`"q;d" /usr/share/dict/words'
 alias sshkeygen='ssh-keygen -t rsa -b 4096 -C'
 
 # java
+alias switch_java_10='export JAVA_HOME=$JAVA_HOME_10'
 alias switch_java_9='export JAVA_HOME=$JAVA_HOME_9'
 alias switch_java_8='export JAVA_HOME=$JAVA_HOME_8'
 
