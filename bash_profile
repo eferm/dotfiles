@@ -52,15 +52,15 @@ alias word='sed `perl -e "print int rand(99999)"`"q;d" /usr/share/dict/words'
 alias sshkeygen='ssh-keygen -t rsa -b 4096 -C'
 
 # java
-alias java_9='export JAVA_HOME=$JAVA_HOME_9'
-alias java_8='export JAVA_HOME=$JAVA_HOME_8'
+alias switch_java_9='export JAVA_HOME=$JAVA_HOME_9'
+alias switch_java_8='export JAVA_HOME=$JAVA_HOME_8'
 
 # python
-alias python_osx='export PATH=$PATH_DEFAULT_PYTHON'
-alias python_brew_3='export PATH=$PYTHON_BREW_3:$PATH_DEFAULT_PYTHON'
-alias python_brew_2='export PATH=$PYTHON_BREW_2:$PATH_DEFAULT_PYTHON'
-alias python_conda_3='export PATH=$PYTHON_CONDA_3:$PATH_DEFAULT_PYTHON'
-alias python_conda_2='export PATH=$PYTHON_CONDA_2:$PATH_DEFAULT_PYTHON'
+alias switch_python_osx='export PATH=$PATH_DEFAULT_PYTHON'
+alias switch_python_brew_3='export PATH=$PYTHON_BREW_3:$PATH_DEFAULT_PYTHON'
+alias switch_python_brew_2='export PATH=$PYTHON_BREW_2:$PATH_DEFAULT_PYTHON'
+alias switch_python_conda_3='export PATH=$PYTHON_CONDA_3:$PATH_DEFAULT_PYTHON'
+alias switch_python_conda_2='export PATH=$PYTHON_CONDA_2:$PATH_DEFAULT_PYTHON'
 
 alias requests_proxy_on='export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE'
 alias requests_proxy_off='export REQUESTS_CA_BUNDLE='
