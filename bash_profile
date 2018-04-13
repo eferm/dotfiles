@@ -7,16 +7,18 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # https://stackoverflow.com/q/59895
 
 BREWPATH=/usr/local/bin:/usr/local/sbin
+OPENSSLPATH=/usr/local/opt/openssl/bin
+SQLITEPATH=/usr/local/opt/sqlite/bin
 
 JAVA_HOME_10=$(/usr/libexec/java_home -v10)
 JAVA_HOME_9=$(/usr/libexec/java_home -v9)
 JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
 
-PYTHON_BREW_2=/usr/local/opt/python@2/bin
-PYTHON_BREW_3=/usr/local/opt/python/libexec/bin
+PYTHON_BREW_2=$SQLITEPATH:$OPENSSLPATH:/usr/local/opt/python@2/bin
+PYTHON_BREW_3=$SQLITEPATH:$OPENSSLPATH:/usr/local/opt/python/libexec/bin
 
-PYTHON_CONDA_3=/usr/local/miniconda3/bin
-PYTHON_CONDA_2=/usr/local/miniconda2/bin
+PYTHON_CONDA_3=$SQLITEPATH:$OPENSSLPATH:/usr/local/miniconda3/bin
+PYTHON_CONDA_2=$SQLITEPATH:$OPENSSLPATH:/usr/local/miniconda2/bin
 
 SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
 
