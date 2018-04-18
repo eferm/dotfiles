@@ -1,3 +1,1 @@
-PATH=/usr/local/miniconda3/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
 MAILTO=""
-0 * * * * /bin/bash /Users/eferm/Dropbox/code/data-pipeline/0-run-landing.sh >> /Users/eferm/Dropbox/code/data-pipeline/0-run-landing.log 2>&1
