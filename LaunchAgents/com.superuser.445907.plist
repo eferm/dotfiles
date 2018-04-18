@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC -//Apple Computer//DTD PLIST 1.0//EN
+http://www.apple.com/DTDs/PropertyList-1.0.dtd>
+<plist version="1.0">
+<dict>
+		<key>EnvironmentVariables</key>
+    <dict>
+				<key>PATH</key>
+				<string>/usr/local/miniconda3/envs/data-pipeline/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin</string>
+    </dict>
+    <key>Label</key>
+    <string>com.superuser.445907</string>
+    <key>Program</key>
+    <string>/Users/eferm/Dropbox/code/data-pipeline/0-run-landing.sh</string> <!-- ~/ doesn't work -->
+    <key>WatchPaths</key>
+    <array>
+        <string>/Users/eferm/Dropbox/data/landing/</string>
+    </array>
+    <key>ThrotteInterval</key>
+    <integer>0</integer> <!-- run at most every 0 seconds, by default 10 -->
+		<key>StandardOutPath</key>
+		<string>/Users/eferm/Dropbox/code/data-pipeline/0-run-landing.out</string>
+		<key>StandardErrorPath</key>
+		<string>/Users/eferm/Dropbox/code/data-pipeline/0-run-landing.err</string>
+</dict>
+</plist>
