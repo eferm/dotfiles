@@ -7,20 +7,22 @@ http://www.apple.com/DTDs/PropertyList-1.0.dtd>
     <dict>
 				<key>PATH</key>
 				<string>/usr/local/miniconda3/envs/data-pipeline/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin</string>
+				<key>PYTHONPATH</key>
+				<string>/Users/eferm/Dropbox/code/eferm_util</string>
     </dict>
     <key>Label</key>
     <string>com.superuser.445907</string>
     <key>Program</key>
-    <string>/Users/eferm/Dropbox/code/data-pipeline/0-run-landing.sh</string>
+    <string>/Users/eferm/Dropbox/code/data-pipeline/0-pipeline-landing.sh</string>
     <key>WatchPaths</key> <!-- https://superuser.com/questions/445907/monitor-a-folder-osx-for-file-changes-then-run-a-bash-script -->
     <array>
         <string>/Users/eferm/Dropbox/data/landing/</string>
     </array>
     <key>ThrotteInterval</key>
-    <integer>0</integer> <!-- run at most every 0 seconds, by default 10 -->
+    <integer>1</integer> <!-- run at most every 0 seconds, by default 10 -->
 		<key>StandardOutPath</key>
-		<string>/Users/eferm/Dropbox/code/data-pipeline/0-run-landing.out</string>
+		<string>/Users/eferm/Dropbox/code/data-pipeline/0-pipeline-landing.out</string>
 		<key>StandardErrorPath</key>
-		<string>/Users/eferm/Dropbox/code/data-pipeline/0-run-landing.err</string>
+		<string>/Users/eferm/Dropbox/code/data-pipeline/0-pipeline-landing.err</string>
 </dict>
 </plist>
