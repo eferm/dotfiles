@@ -14,11 +14,11 @@ JAVA_HOME_10=$(/usr/libexec/java_home -v10)
 JAVA_HOME_9=$(/usr/libexec/java_home -v9)
 JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
 
-PYTHON_BREW_2=$SQLITEPATH:$OPENSSLPATH:/usr/local/opt/python@2/bin
-PYTHON_BREW_3=$SQLITEPATH:$OPENSSLPATH:/usr/local/opt/python/libexec/bin
+PYTHON_BREW_2=/usr/local/opt/python@2/bin
+PYTHON_BREW_3=/usr/local/opt/python/libexec/bin
 
-PYTHON_CONDA_3=$SQLITEPATH:$OPENSSLPATH:/usr/local/miniconda3/bin
-PYTHON_CONDA_2=$SQLITEPATH:$OPENSSLPATH:/usr/local/miniconda2/bin
+PYTHON_CONDA_3=/usr/local/miniconda3/bin
+PYTHON_CONDA_2=/usr/local/miniconda2/bin
 
 SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
 
@@ -30,7 +30,12 @@ SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
 export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
 export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE
 export JAVA_HOME=$JAVA_HOME_10
+export PYTHONPATH=/Users/eferm/Dropbox/code/eferm_util
 export GOPATH=$HOME/go
+
+# useful for pycurl
+export CPPFLAGS=-I/usr/local/opt/openssl/include
+export LDFLAGS=-L/usr/local/opt/openssl/lib
 
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$BREWPATH:$PATH # include homebrew
