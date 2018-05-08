@@ -33,7 +33,7 @@ export GOPATH=$HOME/go
 
 # python related
 export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE
-export PYTHONPATH=/Users/eferm/Dropbox/code/eferm_util
+export PYTHONPATH=/Users/eferm/Dropbox/code/eferm-utils
 export WORKON_HOME=/Users/eferm/.virtualenvs
 source /usr/local/bin/virtualenvwrapper.sh
 # useful for pycurl
