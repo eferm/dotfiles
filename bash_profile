@@ -28,23 +28,20 @@ SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
 #############################
 
 export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
-export JAVA_HOME=$JAVA_HOME_10
+export JAVA_HOME=$JAVA_HOME_9
 export GOPATH=$HOME/go
-
-# python related
-export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE
-export PYTHONPATH=/Users/eferm/Dropbox/code/eferm-utils
-export WORKON_HOME=/Users/eferm/.virtualenvs
-source /usr/local/bin/virtualenvwrapper.sh
-# useful for pycurl
-export CPPFLAGS=-I/usr/local/opt/openssl/include
-export LDFLAGS=-L/usr/local/opt/openssl/lib
 
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$BREWPATH:$PATH # include homebrew
 export PATH=$GOPATH/bin:$PATH # include go
 PATH_DEFAULT_PYTHON=$PATH # used later for switching python dist
 export PATH=$PYTHON_BREW_3:$PATH # include preferred python
+
+# python related
+export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE
+export WORKON_HOME=/Users/eferm/.virtualenvs
+export CPPFLAGS=-I/usr/local/opt/openssl/include
+export LDFLAGS=-L/usr/local/opt/openssl/lib
 
 
 #############################
@@ -103,8 +100,10 @@ cp $DIR/direnvrc ~/.direnvrc
 
 
 #############################
-# EXECUTE COMMANDS
+# EVAL, SOURCE, EXECUTE COMMANDS
 #############################
 
 eval "$(direnv hook bash)"
+source /usr/local/bin/virtualenvwrapper.sh
+
 /usr/local/bin/archey --color
