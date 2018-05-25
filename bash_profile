@@ -90,10 +90,6 @@ cp $DIR/vimrc ~/.vimrc
 # ssh
 cp $DIR/ssh/config ~/.ssh/config
 
-# python
-mkdir -p ~/.pip
-cp $DIR/pip/pip.conf ~/.pip/pip.conf
-
 # direnv
 cp $DIR/direnvrc ~/.direnvrc
 
