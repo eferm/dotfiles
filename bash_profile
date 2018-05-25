@@ -99,6 +99,7 @@ cp $DIR/direnvrc ~/.direnvrc
 #############################
 
 eval "$(direnv hook bash)"
+pip install -U -q virtualenvwrapper
 source /usr/local/bin/virtualenvwrapper.sh
 
 /usr/local/bin/archey --color
