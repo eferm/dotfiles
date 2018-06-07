@@ -4,7 +4,7 @@
 # LOCAL VARIABLES
 #############################
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # https://stackoverflow.com/q/59895
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 BREWPATH=/usr/local/bin:/usr/local/sbin
 OPENSSLPATH=/usr/local/opt/openssl/bin
@@ -99,7 +99,7 @@ cp $DIR/direnvrc ~/.direnvrc
 #############################
 
 eval "$(direnv hook bash)"
-pip install -U -q virtualenvwrapper
+# pip install -U -q virtualenvwrapper
 source /usr/local/bin/virtualenvwrapper.sh
 
-/usr/local/bin/archey --color
+# /usr/local/bin/archey --color
