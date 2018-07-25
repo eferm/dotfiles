@@ -1,10 +1,22 @@
 #!/bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+#############################
+# COPY STUFF
+#############################
+# cp /Users/eferm/Dropbox/env/certs/pt/ca-bundle.crt /
+cp /Users/eferm/Dropbox/env/certs/pt/cert.pem /usr/local/etc/openssl/
+
+
+mkdir -p /usr/local/etc/openssl/certs/
+cp /Users/eferm/Dropbox/env/certs/pt/PalantirThirdGenRootCA.pem /usr/local/etc/openssl/certs/
+/usr/local/opt/openssl/bin/c_rehash
+
+
 #############################
 # LOCAL VARIABLES
 #############################
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 BREWPATH=/usr/local/bin:/usr/local/sbin
 OPENSSLPATH=/usr/local/opt/openssl/bin
@@ -20,8 +32,7 @@ PYTHON_BREW_3=/usr/local/opt/python/libexec/bin
 PYTHON_CONDA_3=/usr/local/miniconda3/bin
 PYTHON_CONDA_2=/usr/local/miniconda2/bin
 
-SSL_CA_BUNDLE=/Users/eferm/Dropbox/env/certs/ca-bundle.crt
-
+CERT_FILE=/usr/local/etc/openssl/cert.pem
 
 #############################
 # ENV VARIABLES
@@ -32,17 +43,21 @@ export JAVA_HOME=$JAVA_HOME_9
 export GOPATH=$HOME/go
 
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
-export PATH=$BREWPATH:$PATH # include homebrew
-export PATH=$GOPATH/bin:$PATH # include go
-PATH_NO_PYTHON=$PATH # used later for switching python dist
-export PATH=$PYTHON_BREW_3:$PATH # include preferred python
+export PATH=$BREWPATH:$PATH  # include homebrew
+export PATH=$GOPATH/bin:$PATH  # include go
+PATH_NO_PYTHON=$PATH  # used later for switching python dist
+export PATH=$PYTHON_BREW_3:$PATH  # include preferred python
 
 # python related
-export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE
 export WORKON_HOME=/Users/eferm/.virtualenvs
 export CPPFLAGS=-I/usr/local/opt/openssl/include
 export LDFLAGS=-L/usr/local/opt/openssl/lib
 
+# ssl related
+export SSL_CERT_FILE=$CERT_FILE
+export CURL_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt
+export REQUESTS_CA_BUNDLE=$CERT_FILE
+export WEBSOCKET_CLIENT_CA_BUNDLE=$CERT_FILE
 
 #############################
 # ALIASES
@@ -53,7 +68,7 @@ alias bb='cd ../..'
 alias bbb='cd ../../..'
 alias bbbb='cd ../../../..'
 alias ls='ls -AGh'
-alias ll='ls -AlGh' # -AlGrth
+alias ll='ls -AlGh'  # -AlGrth
 alias rm='rm -f'
 alias google='ping -c 5 google.com'
 alias word='sed `perl -e "print int rand(99999)"`"q;d" /usr/share/dict/words'
@@ -70,7 +85,8 @@ alias switch_python_brew_2='export PATH=$PYTHON_BREW_2:$PATH_NO_PYTHON'
 alias switch_python_conda_3='export PATH=$PYTHON_CONDA_3:$PATH_NO_PYTHON'
 alias switch_python_conda_2='export PATH=$PYTHON_CONDA_2:$PATH_NO_PYTHON'
 
-alias requests_proxy_on='export REQUESTS_CA_BUNDLE=$SSL_CA_BUNDLE'
+alias brew="SSL_CERT_FILE='' CURL_CA_BUNDLE='' brew"
+alias requests_proxy_on='export REQUESTS_CA_BUNDLE=$CERT_FILE'
 alias requests_proxy_off='export REQUESTS_CA_BUNDLE='
 
 alias pip_upgrade_all='pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U'
