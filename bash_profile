@@ -2,15 +2,14 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+
 #############################
 # COPY STUFF
 #############################
-# cp /Users/eferm/Dropbox/env/certs/pt/ca-bundle.crt /
 cp /Users/eferm/Dropbox/env/certs/pt/cert.pem /usr/local/etc/openssl/
 
-
 mkdir -p /usr/local/etc/openssl/certs/
-cp /Users/eferm/Dropbox/env/certs/pt/PalantirThirdGenRootCA.pem /usr/local/etc/openssl/certs/
+cp /Users/eferm/Dropbox/env/certs/pt/rootca.pem /usr/local/etc/openssl/certs/
 /usr/local/opt/openssl/bin/c_rehash
 
 
@@ -33,7 +32,9 @@ PYTHON_BREW_3=/usr/local/opt/python/libexec/bin
 PYTHON_CONDA_3=/usr/local/miniconda3/bin
 PYTHON_CONDA_2=/usr/local/miniconda2/bin
 
-CERT_FILE=/usr/local/etc/openssl/cert.pem
+CERT_PEM_FILE=/usr/local/etc/openssl/cert.pem
+CERT_CRT_FILE=/Users/eferm/Dropbox/env/certs/pt/ca-bundle.crt
+
 
 #############################
 # ENV VARIABLES
@@ -52,14 +53,15 @@ export PATH=$PYTHON_BREW_3:$PATH  # include preferred python
 
 # python related
 export WORKON_HOME=/Users/eferm/.virtualenvs
+
+# ssl related
+export SSL_CERT_FILE=$CERT_PEM_FILE
+export CURL_CA_BUNDLE=$CERT_CRT_FILE
+export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE
+export WEBSOCKET_CLIENT_CA_BUNDLE=$CERT_PEM_FILE
 export CPPFLAGS=-I/usr/local/opt/openssl/include
 export LDFLAGS=-L/usr/local/opt/openssl/lib
 
-# ssl related
-export SSL_CERT_FILE=$CERT_FILE
-export CURL_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt
-export REQUESTS_CA_BUNDLE=$CERT_FILE
-export WEBSOCKET_CLIENT_CA_BUNDLE=$CERT_FILE
 
 #############################
 # ALIASES
@@ -88,7 +90,7 @@ alias switch_python_conda_3='export PATH=$PYTHON_CONDA_3:$PATH_NO_PYTHON'
 alias switch_python_conda_2='export PATH=$PYTHON_CONDA_2:$PATH_NO_PYTHON'
 
 alias brew="SSL_CERT_FILE='' CURL_CA_BUNDLE='' brew"
-alias requests_proxy_on='export REQUESTS_CA_BUNDLE=$CERT_FILE'
+alias requests_proxy_on='export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE'
 alias requests_proxy_off='export REQUESTS_CA_BUNDLE='
 
 alias pip_upgrade_all='pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U'
@@ -117,7 +119,8 @@ cp $DIR/direnvrc ~/.direnvrc
 #############################
 
 eval "$(direnv hook bash)"
-# pip install -U -q virtualenvwrapper
+pip install -U -q virtualenvwrapper
 source /usr/local/bin/virtualenvwrapper.sh
 
 # /usr/local/bin/archey --color
+
