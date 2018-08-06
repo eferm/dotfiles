@@ -21,6 +21,7 @@ cp /Users/eferm/Dropbox/env/certs/pt/PalantirThirdGenRootCA.pem /usr/local/etc/o
 BREWPATH=/usr/local/bin:/usr/local/sbin
 OPENSSLPATH=/usr/local/opt/openssl/bin
 SQLITEPATH=/usr/local/opt/sqlite/bin
+MACTEXPATH=/usr/local/texlive/2018/bin/x86_64-darwin
 
 JAVA_HOME_10=$(/usr/libexec/java_home -v10)
 JAVA_HOME_9=$(/usr/libexec/java_home -v9)
@@ -45,6 +46,7 @@ export GOPATH=$HOME/go
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$BREWPATH:$PATH  # include homebrew
 export PATH=$GOPATH/bin:$PATH  # include go
+export PATH=$MACTEXPATH:$PATH  # include mactex
 PATH_NO_PYTHON=$PATH  # used later for switching python dist
 export PATH=$PYTHON_BREW_3:$PATH  # include preferred python
 
