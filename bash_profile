@@ -41,7 +41,7 @@ CERT_CRT_FILE=/Users/eferm/Dropbox/env/certs/pt/ca-bundle.crt
 #############################
 
 export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
-export JAVA_HOME=$JAVA_HOME_9
+export JAVA_HOME=$JAVA_HOME_8
 export GOPATH=$HOME/go
 
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
@@ -61,6 +61,7 @@ export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE
 export WEBSOCKET_CLIENT_CA_BUNDLE=$CERT_PEM_FILE
 export CPPFLAGS=-I/usr/local/opt/openssl/include
 export LDFLAGS=-L/usr/local/opt/openssl/lib
+export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
 
 
 #############################
