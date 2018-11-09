@@ -10,7 +10,7 @@ cp /Users/eferm/Dropbox/env/certs/pt/cert.pem /usr/local/etc/openssl/
 
 mkdir -p /usr/local/etc/openssl/certs/
 cp /Users/eferm/Dropbox/env/certs/pt/rootca.pem /usr/local/etc/openssl/certs/
-/usr/local/opt/openssl/bin/c_rehash
+#/usr/local/opt/openssl/bin/c_rehash
 
 
 #############################
@@ -76,6 +76,7 @@ alias ls='ls -AGh'
 alias ll='ls -AlGh'  # -AlGrth
 alias rm='rm -f'
 alias google='ping -c 5 google.com'
+alias pingwdate='ping -v google.com | while read line; do echo `gdate +%Y-%m-%d\ %H:%M:%S:%N` $line; done'
 alias word='sed `perl -e "print int rand(99999)"`"q;d" /usr/share/dict/words'
 alias sshkeygen='ssh-keygen -t rsa -b 4096 -C'
 
@@ -85,6 +86,7 @@ alias switch_java_9='export JAVA_HOME=$JAVA_HOME_9'
 alias switch_java_8='export JAVA_HOME=$JAVA_HOME_8'
 
 # python
+alias venv='source venv/bin/activate'
 alias switch_python_brew_3='export PATH=$PYTHON_BREW_3:$PATH_NO_PYTHON'
 alias switch_python_brew_2='export PATH=$PYTHON_BREW_2:$PATH_NO_PYTHON'
 alias switch_python_conda_3='export PATH=$PYTHON_CONDA_3:$PATH_NO_PYTHON'
