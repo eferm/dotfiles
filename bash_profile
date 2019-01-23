@@ -45,18 +45,12 @@ export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
 export JAVA_HOME=$JAVA_HOME_8
 export GOPATH=$HOME/go
 
-# spark
-# `brew info apache-spark | grep /usr | tail -n 1 | cut -f 1 -d " "`/libexec
-export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
-# `brew info hadoop | grep /usr | head -n 1 | cut -f 1 -d " "`/libexec
-export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
-
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$BREWPATH:$PATH  # include homebrew
 export PATH=$GOPATH/bin:$PATH  # include go
 export PATH=$MACTEXPATH:$PATH  # include mactex
 PATH_NO_PYTHON=$PATH  # used later for switching python dist
-export PATH=$PYTHON_BREW_3:$PATH  # include preferred python
+export PATH=$PYTHON_CONDA_3:$PATH  # include preferred python
 
 # python
 export WORKON_HOME=/Users/eferm/.virtualenvs
