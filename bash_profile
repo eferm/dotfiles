@@ -51,10 +51,10 @@ export PATH=$MACTEXPATH:$PATH  # include mactex
 PATH_NO_PYTHON=$PATH  # used later for switching python dist
 export PATH=$PYTHON_BREW_3:$PATH  # include preferred python
 
-# python related
+# python
 export WORKON_HOME=/Users/eferm/.virtualenvs
 
-# ssl related
+# ssl
 export SSL_CERT_FILE=$CERT_PEM_FILE
 export CURL_CA_BUNDLE=$CERT_CRT_FILE
 export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE
@@ -62,6 +62,13 @@ export WEBSOCKET_CLIENT_CA_BUNDLE=$CERT_PEM_FILE
 export CPPFLAGS=-I/usr/local/opt/openssl/include
 export LDFLAGS=-L/usr/local/opt/openssl/lib
 export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
+
+# spark
+export SPARK_HOME=`brew info apache-spark | grep /usr | tail -n 1 | cut -f 1 -d " "`/libexec
+export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
+export HADOOP_HOME=`brew info hadoop | grep /usr | head -n 1 | cut -f 1 -d " "`/libexec
+export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
+
 
 
 #############################
@@ -122,8 +129,8 @@ cp $DIR/direnvrc ~/.direnvrc
 #############################
 
 eval "$(direnv hook bash)"
-pip install -U -q virtualenvwrapper
-source /usr/local/bin/virtualenvwrapper.sh
+# pip install -U -q virtualenvwrapper
+# source /usr/local/bin/virtualenvwrapper.sh
 
 # /usr/local/bin/archey --color
 
