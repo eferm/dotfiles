@@ -10,7 +10,7 @@ cp /Users/eferm/Dropbox/env/certs/pt/cert.pem /usr/local/etc/openssl/
 
 mkdir -p /usr/local/etc/openssl/certs/
 cp /Users/eferm/Dropbox/env/certs/pt/rootca.pem /usr/local/etc/openssl/certs/
-#/usr/local/opt/openssl/bin/c_rehash
+# /usr/local/opt/openssl/bin/c_rehash
 
 
 #############################
@@ -22,7 +22,8 @@ OPENSSLPATH=/usr/local/opt/openssl/bin
 SQLITEPATH=/usr/local/opt/sqlite/bin
 MACTEXPATH=/usr/local/texlive/2018/bin/x86_64-darwin
 
-JAVA_HOME_10=$(/usr/libexec/java_home -v10)
+JAVA_HOME_11=$(/usr/libexec/java_home -v11)
+# JAVA_HOME_10=$(/usr/libexec/java_home -v10)
 JAVA_HOME_9=$(/usr/libexec/java_home -v9)
 JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
 
@@ -43,6 +44,12 @@ CERT_CRT_FILE=/Users/eferm/Dropbox/env/certs/pt/ca-bundle.crt
 export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
 export JAVA_HOME=$JAVA_HOME_8
 export GOPATH=$HOME/go
+
+# spark
+# `brew info apache-spark | grep /usr | tail -n 1 | cut -f 1 -d " "`/libexec
+export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
+# `brew info hadoop | grep /usr | head -n 1 | cut -f 1 -d " "`/libexec
+export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$BREWPATH:$PATH  # include homebrew
@@ -88,7 +95,8 @@ alias word='sed `perl -e "print int rand(99999)"`"q;d" /usr/share/dict/words'
 alias sshkeygen='ssh-keygen -t rsa -b 4096 -C'
 
 # java
-alias switch_java_10='export JAVA_HOME=$JAVA_HOME_10'
+alias switch_java_11='export JAVA_HOME=$JAVA_HOME_11'
+# alias switch_java_10='export JAVA_HOME=$JAVA_HOME_10'
 alias switch_java_9='export JAVA_HOME=$JAVA_HOME_9'
 alias switch_java_8='export JAVA_HOME=$JAVA_HOME_8'
 
