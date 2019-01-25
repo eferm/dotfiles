@@ -49,11 +49,6 @@ export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$BREWPATH:$PATH  # include homebrew
 export PATH=$GOPATH/bin:$PATH  # include go
 export PATH=$MACTEXPATH:$PATH  # include mactex
-PATH_NO_PYTHON=$PATH  # used later for switching python dist
-export PATH=$PYTHON_CONDA_3:$PATH  # include preferred python
-
-# python
-export WORKON_HOME=/Users/eferm/.virtualenvs
 
 # ssl
 export SSL_CERT_FILE=$CERT_PEM_FILE
@@ -69,7 +64,6 @@ export SPARK_HOME=`brew info apache-spark | grep /usr | tail -n 1 | cut -f 1 -d 
 export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
 export HADOOP_HOME=`brew info hadoop | grep /usr | head -n 1 | cut -f 1 -d " "`/libexec
 export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
-
 
 
 #############################
@@ -93,13 +87,6 @@ alias switch_java_11='export JAVA_HOME=$JAVA_HOME_11'
 # alias switch_java_10='export JAVA_HOME=$JAVA_HOME_10'
 alias switch_java_9='export JAVA_HOME=$JAVA_HOME_9'
 alias switch_java_8='export JAVA_HOME=$JAVA_HOME_8'
-
-# python
-alias venv='source venv/bin/activate'
-alias switch_python_brew_3='export PATH=$PYTHON_BREW_3:$PATH_NO_PYTHON'
-alias switch_python_brew_2='export PATH=$PYTHON_BREW_2:$PATH_NO_PYTHON'
-alias switch_python_conda_3='export PATH=$PYTHON_CONDA_3:$PATH_NO_PYTHON'
-alias switch_python_conda_2='export PATH=$PYTHON_CONDA_2:$PATH_NO_PYTHON'
 
 alias brew="SSL_CERT_FILE='' CURL_CA_BUNDLE='' brew"
 alias requests_proxy_on='export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE'
@@ -131,6 +118,9 @@ cp $DIR/direnvrc ~/.direnvrc
 #############################
 
 eval "$(direnv hook bash)"
+eval "$(pyenv init -)"
+pyenv global 3.6.8
+
 # pip install -U -q virtualenvwrapper
 # source /usr/local/bin/virtualenvwrapper.sh
 
