@@ -45,6 +45,9 @@ export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
 export JAVA_HOME=$JAVA_HOME_8
 export GOPATH=$HOME/go
 
+export CPPFLAGS="-I/usr/local/opt/openssl/include -I/usr/local/opt/zlib/include "
+export LDFLAGS="-L/usr/local/opt/openssl/lib -L/usr/local/opt/zlib/lib"
+
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$BREWPATH:$PATH  # include homebrew
 export PATH=$GOPATH/bin:$PATH  # include go
@@ -55,8 +58,6 @@ export SSL_CERT_FILE=$CERT_PEM_FILE
 export CURL_CA_BUNDLE=$CERT_CRT_FILE
 export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE
 export WEBSOCKET_CLIENT_CA_BUNDLE=$CERT_PEM_FILE
-export CPPFLAGS=-I/usr/local/opt/openssl/include
-export LDFLAGS=-L/usr/local/opt/openssl/lib
 export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
 
 # spark
@@ -117,12 +118,7 @@ cp $DIR/direnvrc ~/.direnvrc
 # EVAL, SOURCE, EXECUTE COMMANDS
 #############################
 
-eval "$(direnv hook bash)"
 eval "$(pyenv init -)"
-pyenv global 3.6.8
-
-# pip install -U -q virtualenvwrapper
-# source /usr/local/bin/virtualenvwrapper.sh
 
 # /usr/local/bin/archey --color
 
