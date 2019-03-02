@@ -95,6 +95,8 @@ alias brew="SSL_CERT_FILE='' CURL_CA_BUNDLE='' brew"
 alias requests_proxy_on='export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE'
 alias requests_proxy_off='export REQUESTS_CA_BUNDLE='
 
+# python
+alias pipenv='PIPENV_VENV_IN_PROJECT=1 pipenv'
 alias pip_upgrade_all='pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U'
 alias pip_uninstall_all='pip freeze | xargs pip uninstall -y'
 alias pip_freeze="pip freeze > requirements.txt && sed -i '' -e 's/==/>=/g' requirements.txt"
