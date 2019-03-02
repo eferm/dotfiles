@@ -23,13 +23,12 @@ SQLITEPATH=/usr/local/opt/sqlite/bin
 MACTEXPATH=/usr/local/texlive/2018/bin/x86_64-darwin
 
 JAVA_HOME_11=$(/usr/libexec/java_home -v11)
-# JAVA_HOME_10=$(/usr/libexec/java_home -v10)
 JAVA_HOME_9=$(/usr/libexec/java_home -v9)
 JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
 
+# optional python installs
 PYTHON_BREW_2=/usr/local/opt/python@2/bin
 PYTHON_BREW_3=/usr/local/opt/python/libexec/bin
-
 PYTHON_CONDA_3=/usr/local/miniconda3/bin
 PYTHON_CONDA_2=/usr/local/miniconda2/bin
 
@@ -45,24 +44,29 @@ export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
 export JAVA_HOME=$JAVA_HOME_8
 export GOPATH=$HOME/go
 
+#export LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib -L$(brew --prefix zlib)/lib"
+#export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(brew --prefix zlib)/include -I$(xcrun --show-sdk-path)/usr/include"
+#export CPPFLAGS=$CFLAGS
+
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH=$BREWPATH:$PATH  # include homebrew
 export PATH=$GOPATH/bin:$PATH  # include go
 export PATH=$MACTEXPATH:$PATH  # include mactex
+export PATH=$PYTHON_BREW_3:$PATH  # include python
 
 # ssl
 export SSL_CERT_FILE=$CERT_PEM_FILE
 export CURL_CA_BUNDLE=$CERT_CRT_FILE
 export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE
 export WEBSOCKET_CLIENT_CA_BUNDLE=$CERT_PEM_FILE
-export CPPFLAGS=-I/usr/local/opt/openssl/include
-export LDFLAGS=-L/usr/local/opt/openssl/lib
-export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
+#export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
 
 # spark
-export SPARK_HOME=`brew info apache-spark | grep /usr | tail -n 1 | cut -f 1 -d " "`/libexec
+#export SPARK_HOME=`brew info apache-spark | grep /usr | tail -n 1 | cut -f 1 -d " "`/libexec
+#export HADOOP_HOME=`brew info hadoop | grep /usr | head -n 1 | cut -f 1 -d " "`/libexec
+export SPARK_HOME=/usr/local/Cellar/apache-spark/2.4.0/libexec
+export HADOOP_HOME=/usr/local/Cellar/hadoop/3.1.1/libexec
 export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
-export HADOOP_HOME=`brew info hadoop | grep /usr | head -n 1 | cut -f 1 -d " "`/libexec
 export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
 
@@ -84,7 +88,6 @@ alias sshkeygen='ssh-keygen -t rsa -b 4096 -C'
 
 # java
 alias switch_java_11='export JAVA_HOME=$JAVA_HOME_11'
-# alias switch_java_10='export JAVA_HOME=$JAVA_HOME_10'
 alias switch_java_9='export JAVA_HOME=$JAVA_HOME_9'
 alias switch_java_8='export JAVA_HOME=$JAVA_HOME_8'
 
@@ -120,9 +123,4 @@ cp $DIR/direnvrc ~/.direnvrc
 eval "$(direnv hook bash)"
 eval "$(pyenv init -)"
 pyenv global 3.6.8
-
-# pip install -U -q virtualenvwrapper
-# source /usr/local/bin/virtualenvwrapper.sh
-
-# /usr/local/bin/archey --color
 
