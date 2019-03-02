@@ -120,7 +120,5 @@ cp $DIR/direnvrc ~/.direnvrc
 # EVAL, SOURCE, EXECUTE COMMANDS
 #############################
 
-eval "$(direnv hook bash)"
 eval "$(pyenv init -)"
 pyenv global 3.6.8
-
