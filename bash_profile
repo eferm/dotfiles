@@ -22,8 +22,8 @@ OPENSSLPATH=/usr/local/opt/openssl/bin
 SQLITEPATH=/usr/local/opt/sqlite/bin
 MACTEXPATH=/usr/local/texlive/2018/bin/x86_64-darwin
 
-JAVA_HOME_11=$(/usr/libexec/java_home -v11)
-JAVA_HOME_9=$(/usr/libexec/java_home -v9)
+#JAVA_HOME_11=$(/usr/libexec/java_home -v11)
+#JAVA_HOME_9=$(/usr/libexec/java_home -v9)
 JAVA_HOME_8=$(/usr/libexec/java_home -v1.8)
 
 # optional python installs
@@ -32,17 +32,22 @@ PYTHON_BREW_3=/usr/local/opt/python/libexec/bin
 PYTHON_CONDA_3=/usr/local/miniconda3/bin
 PYTHON_CONDA_2=/usr/local/miniconda2/bin
 
-CERT_PEM_FILE=/usr/local/etc/openssl/cert.pem
-CERT_CRT_FILE=/Users/eferm/Dropbox/env/certs/pt/ca-bundle.crt
+CERT_FILE=/Users/eferm/Dropbox/env/certs/pt/ca-bundle.crt
+
+parse_git_branch() {
+     git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
 
 
 #############################
 # ENV VARIABLES
 #############################
 
-export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
+#export PS1="\[\e[1m\]\D{%Y-%m-%d %H:%M} \u@\H:\w:$ \[\e[0m\]"
+export PS1="\u@\h \[\033[32m\]\w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] $ "
 export JAVA_HOME=$JAVA_HOME_8
 export GOPATH=$HOME/go
+export NPM_CONFIG_REGISTRY=https://artifactory.palantir.build/artifactory/api/npm/all-npm/
 
 #export LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib -L$(brew --prefix zlib)/lib"
 #export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(brew --prefix zlib)/include -I$(xcrun --show-sdk-path)/usr/include"
@@ -55,17 +60,18 @@ export PATH=$MACTEXPATH:$PATH  # include mactex
 export PATH=$PYTHON_BREW_3:$PATH  # include python
 
 # ssl
-export SSL_CERT_FILE=$CERT_PEM_FILE
-export CURL_CA_BUNDLE=$CERT_CRT_FILE
-export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE
-export WEBSOCKET_CLIENT_CA_BUNDLE=$CERT_PEM_FILE
+export SSL_CERT_FILE=$CERT_FILE
+export CURL_CA_BUNDLE=$CERT_FILE
+export REQUESTS_CA_BUNDLE=$CERT_FILE
+export WEBSOCKET_CLIENT_CA_BUNDLE=$CERT_FILE
+export NPM_CONFIG_CAFILE=$CERT_FILE
 #export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
 
 # spark
 #export SPARK_HOME=`brew info apache-spark | grep /usr | tail -n 1 | cut -f 1 -d " "`/libexec
 #export HADOOP_HOME=`brew info hadoop | grep /usr | head -n 1 | cut -f 1 -d " "`/libexec
-export SPARK_HOME=/usr/local/Cellar/apache-spark/2.4.0/libexec
-export HADOOP_HOME=/usr/local/Cellar/hadoop/3.1.1/libexec
+#export SPARK_HOME=/usr/local/Cellar/apache-spark/2.4.0/libexec
+#export HADOOP_HOME=/usr/local/Cellar/hadoop/3.1.1/libexec
 export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
 export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
