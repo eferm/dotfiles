@@ -10,3 +10,5 @@ set tabstop=2
 "set expandtab
 set hlsearch
 "set list
+
+set directory^=$HOME/.vim/tmp//
