@@ -80,32 +80,35 @@ export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 # ALIASES
 #############################
 
+# overrides
+alias ls='ls -Agh'
+alias rm='rm -f'
+alias ping='ping -c 100'
+#alias brew="SSL_CERT_FILE='' CURL_CA_BUNDLE='' brew"
+alias pipenv='PIPENV_VENV_IN_PROJECT=1 pipenv'
+alias archey='archey --offline'
+
+# convenience
 alias b='cd ..'
 alias bb='cd ../..'
 alias bbb='cd ../../..'
 alias bbbb='cd ../../../..'
-alias ls='ls -AGh'
 alias ll='ls -AlGh'  # -AlGrth
-alias rm='rm -f'
 alias google='ping -c 5 google.com'
 alias pingwdate='ping -v google.com | while read line; do echo `gdate +%Y-%m-%d\ %H:%M:%S:%N` $line; done'
 alias word='sed `perl -e "print int rand(99999)"`"q;d" /usr/share/dict/words'
-alias sshkeygen='ssh-keygen -t rsa -b 4096 -C'
 
 # java
 alias switch_java_11='export JAVA_HOME=$JAVA_HOME_11'
 alias switch_java_9='export JAVA_HOME=$JAVA_HOME_9'
 alias switch_java_8='export JAVA_HOME=$JAVA_HOME_8'
 
-alias brew="SSL_CERT_FILE='' CURL_CA_BUNDLE='' brew"
-alias requests_proxy_on='export REQUESTS_CA_BUNDLE=$CERT_PEM_FILE'
-alias requests_proxy_off='export REQUESTS_CA_BUNDLE='
-
 # python
-alias pipenv='PIPENV_VENV_IN_PROJECT=1 pipenv'
 alias pip_upgrade_all='pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U'
 alias pip_uninstall_all='pip freeze | xargs pip uninstall -y'
 alias pip_freeze="pip freeze > requirements.txt && sed -i '' -e 's/==/>=/g' requirements.txt"
+alias requests_proxy_on='export REQUESTS_CA_BUNDLE=$CERT_FILE'
+alias requests_proxy_off='export REQUESTS_CA_BUNDLE='
 
 
 #############################
@@ -114,6 +117,7 @@ alias pip_freeze="pip freeze > requirements.txt && sed -i '' -e 's/==/>=/g' requ
 
 # vim
 mkdir -p ~/.vim/colors
+mkdir -p ~/.vim/tmp  # required for swp file config
 cp $DIR/vim/colors/solarized.vim ~/.vim/colors
 cp $DIR/vimrc ~/.vimrc
 
