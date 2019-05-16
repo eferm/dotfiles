@@ -104,6 +104,7 @@ alias switch_java_9='export JAVA_HOME=$JAVA_HOME_9'
 alias switch_java_8='export JAVA_HOME=$JAVA_HOME_8'
 
 # python
+alias pip_outdated="pip list --outdated --pre"
 alias pip_upgrade_all='pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U'
 alias pip_uninstall_all='pip freeze | xargs pip uninstall -y'
 alias pip_freeze="pip freeze > requirements.txt && sed -i '' -e 's/==/>=/g' requirements.txt"
