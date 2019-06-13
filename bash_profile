@@ -74,6 +74,7 @@ export NPM_CONFIG_CAFILE=$CERT_FILE
 #export HADOOP_HOME=/usr/local/Cellar/hadoop/3.1.1/libexec
 export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
 export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES  # https://stackoverflow.com/a/55379370
 
 
 #############################
