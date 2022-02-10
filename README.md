@@ -9,19 +9,19 @@ This guide only known to be compatible with MacOS Monterey (version 12).
 
 1. [Configure System](#configure-system)
     1. [Hostname](#system-hostname)
-    2. [Homebrew](#system-homebrew)
-    3. [Zsh](#system-zsh)
-    5. [Vim](#system-vim)
-    6. [GPG](#system-gpg)
-    7. [SSH](#system-ssh)
-    8. [Git](#system-git)
-2. [Configure Themes](#configure-themes)
+    1. [Homebrew](#system-homebrew)
+    1. [Zsh](#system-zsh)
+    1. [Vim](#system-vim)
+    1. [GPG](#system-gpg)
+    1. [SSH](#system-ssh)
+    1. [Git](#system-git)
+1. [Configure Themes](#configure-themes)
     1. [Font](#themes-font)
-    2. [Terminal](#themes-terminal)
-    3. [Zsh](#themes-zsh)
-    4. [Vim](#themes-vim)
-    5. [Sublime Text](#themes-sublime-text)
-    6. [Visual Studio Code](#themes-visual-studio-code)
+    1. [Terminal](#themes-terminal)
+    1. [Zsh](#themes-zsh)
+    1. [Vim](#themes-vim)
+    1. [Sublime Text](#themes-sublime-text)
+    1. [Visual Studio Code](#themes-visual-studio-code)
 
 
 ## Configure System
@@ -42,13 +42,13 @@ Clean up hostname and computer name [[apple.stackexchange.com](https://apple.sta
     sudo scutil --set ComputerName <MyMac>
     ```
 
- 2. Flush the DNS cache:
+1. Flush the DNS cache:
 
     ```bash
     dscacheutil -flushcache
     ```
 
- 3. Restart Mac
+1. Restart Mac
 
 
 ### Homebrew <a name="system-homebrew"></a>
@@ -59,7 +59,7 @@ Clean up hostname and computer name [[apple.stackexchange.com](https://apple.sta
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     ```
 
-2. Install packages:
+1. Install packages:
 
     ```bash
     /opt/homebrew/bin/brew install gnupg pyenv poetry sublime-text visual-studio-code
@@ -77,7 +77,7 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
     eval "$(pyenv init --path)"
     ```
 
-2. Add the following to `~/.zshrc`:
+1. Add the following to `~/.zshrc`:
 
     ```bash
     if type brew &>/dev/null; then
@@ -101,7 +101,7 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
     eval "$(pyenv init -)"
     ```
 
-3. Run commands:
+1. Run commands:
 
     ```bash
     mkdir ~/.zfunc && poetry completions zsh > ~/.zfunc/_poetry
@@ -113,7 +113,7 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
     rm -f ~/.zcompdump
     ```
 
-4. Restart Terminal
+1. Restart Terminal
 
 
 ### Vim <a name="system-vim"></a>
@@ -128,7 +128,7 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
     syntax on
     ```
 
-2. Install the `vim-plug` plugin
+1. Install the `vim-plug` plugin
 [[GitHub](https://github.com/junegunn/vim-plug)]:
 
     ```bash
@@ -146,7 +146,7 @@ Import GPG keys [[serverfault.com](https://serverfault.com/a/1040984)]
     - `username@example.com.sub_priv.asc`
     - `ownertrust.txt`
 
-2. Import keys by running commands:
+1. Import keys by running commands:
 
     ```bash
     gpg --import username@example.com.pub.asc
@@ -161,7 +161,7 @@ Import GPG keys [[serverfault.com](https://serverfault.com/a/1040984)]
     gpg --import-ownertrust ownertrust.txt
     ```
 
-3. Trust keys by running commands:
+1. Trust keys by running commands:
 
     ```bash
     gpg --edit-key username@example.com
@@ -190,7 +190,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
     > ...
     ```
 
-2. Add your SSH key to the `ssh-agent`:
+1. Add your SSH key to the `ssh-agent`:
 
     1. Start SSH agent:
 
@@ -202,7 +202,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
         > Agent pid 12345
         ```
 
-    2. Run `vim ~/.ssh/config` and add the following:
+    1. Run `vim ~/.ssh/config` and add the following:
 
         ```
         Host *
@@ -210,13 +210,13 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
           IdentityFile ~/.ssh/id_ed25519
         ```
 
-  3. Add you SSH private key to the `ssh-agent`:
+    1. Add you SSH private key to the SSH agent:
 
         ```bash
         ssh-add --apple-use-keychain ~/.ssh/id_ed25519
         ```
 
-3. Add the SSH **public** key to GitHub:
+1. Add the SSH **public** key to GitHub:
 
     1. Copy the key to your clipboard:
 
@@ -224,7 +224,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
         pbcopy < ~/.ssh/id_ed25519.pub
         ```
 
-    2. In GitHub → Profile → Settings → SSH and GPG keys, click _New SSH key_
+    1. In GitHub → Profile → Settings → SSH and GPG keys, click _New SSH key_
     and paste the key.
 
 
@@ -245,6 +245,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
 ## Configure Themes
 
+
 ### Font <a name="themes-font"></a>
 
 1. Download and install `Droid Sans Mono Dotted for Powerline.ttf`
@@ -257,7 +258,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 [[GitHub](https://github.com/arcticicestudio/nord-terminal-app/releases)]
     - Click _Default_
 
-2. Change font to _Droid Sans Mono Dotted for Powerline_:
+1. Change font to _Droid Sans Mono Dotted for Powerline_:
     - Font Weight: Regular
     - Font Size: 11pt
     - Character Spacing: 1
@@ -269,7 +270,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 1. Download the `agnoster.zsh-theme` to `~/.agnoster.zsh-theme`
 [[GitHub](https://github.com/agnoster/agnoster-zsh-theme)]
 
-2. Edit `.zshrc` and add the following line at the top of the file:
+1. Edit `.zshrc` and add the following line at the top of the file:
 
     ```bash
     source $HOME/.agnoster.zsh-theme
@@ -288,16 +289,16 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
     colorscheme nord
     ```
 
-2. Still in `vim` run: `:PlugInstall`
+1. Still in `vim` run: `:PlugInstall`
 
-3. `:wq` to save and exit `vim`
+1. Save and exit `vim`
 
 
 ### Sublime Text <a name="themes-sublime-text"></a>
 
 1. Run `Shift+Cmd+P` → Install Package → `Nord`
 
-2. Run `Shift+Cmd+P` → Preferences: Settings, and add:
+1. Run `Shift+Cmd+P` → Preferences: Settings, and add:
 
     ```json
     "theme": "Adaptive.sublime-theme",
@@ -312,7 +313,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
 1. Install the `Nord Deep` extension
 
-2. Run `Shift+Cmd+P` → Open Settings (JSON), and add:
+1. Run `Shift+Cmd+P` → Open Settings (JSON), and add:
 
     ```json
     "workbench.colorTheme": "Nord Deep",
