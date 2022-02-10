@@ -245,6 +245,8 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
 ## Configure Themes
 
+Preference for the [Nord Theme](https://www.nordtheme.com/).
+
 
 ### Font <a name="themes-font"></a>
 
