@@ -32,19 +32,19 @@ Clean up hostname and computer name [[apple.stackexchange.com](https://apple.sta
 
 1. Run commands:
 
-    ```bash
+    ```shell
     sudo scutil --set HostName <mymac>
     ```
-    ```bash
+    ```shell
     sudo scutil --set LocalHostName <MyMac>
     ```
-    ```bash
+    ```shell
     sudo scutil --set ComputerName <MyMac>
     ```
 
 1. Flush the DNS cache:
 
-    ```bash
+    ```shell
     dscacheutil -flushcache
     ```
 
@@ -55,13 +55,13 @@ Clean up hostname and computer name [[apple.stackexchange.com](https://apple.sta
 
 1. Install Homebrew [[brew.sh](https://brew.sh/)]:
 
-    ```bash
+    ```shell
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     ```
 
 1. Install packages:
 
-    ```bash
+    ```shell
     /opt/homebrew/bin/brew install gnupg pyenv poetry sublime-text visual-studio-code
     ```
 
@@ -72,22 +72,21 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
 
 1. Add the following to `~/.zprofile`:
 
-    ```bash
+    ```shell
     eval "$(/opt/homebrew/bin/brew shellenv)"
     eval "$(pyenv init --path)"
     ```
 
 1. Add the following to `~/.zshrc`:
 
-    ```bash
+    ```shell
     if type brew &>/dev/null; then
        FPATH=$(brew --prefix)/share/zsh/site-functions:$FPATH
     fi
 
     fpath+=~/.zfunc
-    zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
-    autoload -Uz compinit
-    compinit
+    autoload -Uz compinit && compinit
+    zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
     setopt PROMPT_SUBST
 
@@ -103,13 +102,13 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
 
 1. Run commands:
 
-    ```bash
+    ```shell
     mkdir ~/.zfunc && poetry completions zsh > ~/.zfunc/_poetry
     ```
-    ```bash
+    ```shell
     chmod -R go-w '/opt/homebrew/share'
     ```
-    ```bash
+    ```shell
     rm -f ~/.zcompdump
     ```
 
@@ -120,7 +119,7 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
 
 1. Add the following to `~/.vimrc`:
 
-    ```
+    ```vim
     set number
     set t_Co=16
     set re=0
@@ -131,7 +130,7 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
 1. Install the `vim-plug` plugin
 [[GitHub](https://github.com/junegunn/vim-plug)]:
 
-    ```bash
+    ```shell
     curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     ```
 
@@ -148,22 +147,22 @@ Import GPG keys [[serverfault.com](https://serverfault.com/a/1040984)]
 
 1. Import keys by running commands:
 
-    ```bash
+    ```shell
     gpg --import username@example.com.pub.asc
     ```
-    ```bash
+    ```shell
     gpg --import username@example.com.priv.asc
     ```
-    ```bash
+    ```shell
     gpg --import username@example.com.sub_priv.asc
     ```
-    ```bash
+    ```shell
     gpg --import-ownertrust ownertrust.txt
     ```
 
 1. Trust keys by running commands:
 
-    ```bash
+    ```shell
     gpg --edit-key username@example.com
     ```
     Output:
@@ -180,7 +179,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
 1. Generate new SSH key:
 
-    ```bash
+    ```shell
     ssh-keygen -t ed25519 -C "username@example.com"
     ```
     Output:
@@ -194,7 +193,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
     1. Start SSH agent:
 
-        ```bash
+        ```shell
         eval "$(ssh-agent -s)"
         ```
         Output:
@@ -206,13 +205,13 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
         ```
         Host *
-          AddKeysToAgent yes
-          IdentityFile ~/.ssh/id_ed25519
+            AddKeysToAgent yes
+            IdentityFile ~/.ssh/id_ed25519
         ```
 
     1. Add you SSH private key to the SSH agent:
 
-        ```bash
+        ```shell
         ssh-add --apple-use-keychain ~/.ssh/id_ed25519
         ```
 
@@ -220,7 +219,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
     1. Copy the key to your clipboard:
 
-        ```bash
+        ```shell
         pbcopy < ~/.ssh/id_ed25519.pub
         ```
 
@@ -232,13 +231,13 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
 1. Run commands:
 
-    ```bash
+    ```shell
     git config --global user.name "Firstname Lastname"
     ```
-    ```bash
+    ```shell
     git config --global user.email "username@example.com"
     ```
-    ```bash
+    ```shell
     git config --global commit.gpgsign true
     ```
 
@@ -274,7 +273,7 @@ Preference for the [Nord Theme](https://www.nordtheme.com/).
 
 1. Edit `.zshrc` and add the following line at the top of the file:
 
-    ```bash
+    ```shell
     source $HOME/.agnoster.zsh-theme
     ```
 
@@ -283,7 +282,7 @@ Preference for the [Nord Theme](https://www.nordtheme.com/).
 
 1. Run `vim ~/.vimrc` and append the following:
 
-    ```
+    ```vim
     call plug#begin(expand('~/.vim/plugged'))
     Plug 'arcticicestudio/nord-vim'
     call plug#end()
