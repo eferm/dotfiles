@@ -28,7 +28,7 @@ This guide only known to be compatible with MacOS Monterey (version 12).
 
 ### Hostname <a name="system-hostname"></a>
 
-Configure hostname and computer name [[apple.stackexchange.com](https://apple.stackexchange.com/a/287775)]
+Clean up hostname and computer name [[apple.stackexchange.com](https://apple.stackexchange.com/a/287775)]
 
 1. Run commands:
 
@@ -247,7 +247,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
 ### Font <a name="themes-font"></a>
 
-1. Download and install _Droid Sans Mono Dotted for Powerline_
+1. Download and install `Droid Sans Mono Dotted for Powerline.ttf`
 [[GitHub](https://github.com/powerline/fonts)]
 
 
@@ -266,7 +266,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
 ### Zsh <a name="themes-zsh"></a>
 
-1. Download the `agnoster.zsh-theme` theme to `~/.agnoster.zsh-theme`
+1. Download the `agnoster.zsh-theme` to `~/.agnoster.zsh-theme`
 [[GitHub](https://github.com/agnoster/agnoster-zsh-theme)]
 
 2. Edit `.zshrc` and add the following line at the top of the file:
