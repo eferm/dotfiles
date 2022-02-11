@@ -9,12 +9,14 @@ This guide only known to be compatible with MacOS Monterey (version 12).
 
 1. [Configure System](#configure-system)
     1. [Hostname](#system-hostname)
+    1. [Terminal](#system-terminal)
     1. [Homebrew](#system-homebrew)
     1. [Zsh](#system-zsh)
     1. [Vim](#system-vim)
     1. [GPG](#system-gpg)
     1. [SSH](#system-ssh)
     1. [Git](#system-git)
+    1. [Python](#system-python)
 1. [Configure Themes](#configure-themes)
     1. [Font](#themes-font)
     1. [Terminal](#themes-terminal)
@@ -51,6 +53,12 @@ Clean up hostname and computer name [[apple.stackexchange.com](https://apple.sta
 1. Restart Mac
 
 
+### Terminal <a name="system-terminal"></a>
+
+1. Create a copy of `/Applications/Utilities/Terminal.app` called
+`Rosetta Terminal.app` and set the _Open using Rosetta_ option in _Get Info_.
+
+
 ### Homebrew <a name="system-homebrew"></a>
 
 1. Install Homebrew [[brew.sh](https://brew.sh/)]:
@@ -58,11 +66,16 @@ Clean up hostname and computer name [[apple.stackexchange.com](https://apple.sta
     ```shell
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     ```
+    Run the same command also in _Rosetta Terminal_.
 
 1. Install packages:
 
     ```shell
     /opt/homebrew/bin/brew install gnupg pyenv poetry sublime-text visual-studio-code
+    ```
+    In _Rosetta Terminal_ also run:
+    ```shell
+    /usr/local/bin/brew install pyenv
     ```
 
 
@@ -73,7 +86,15 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
 1. Add the following to `~/.zprofile`:
 
     ```shell
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+    echo $(arch)
+
+    if [ $(arch) = 'i386' ]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+        export PYENV_ROOT="${HOME}/.pyenv_x86"
+    else
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    fi
+
     eval "$(pyenv init --path)"
     ```
 
@@ -97,6 +118,9 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
 
     export LS_COLORS=exfxfeaeBxxehehbadacea
     
+    if [ $(arch) = 'i386' ]; then
+        export PYENV_ROOT="${HOME}/.pyenv_x86"
+    fi
     eval "$(pyenv init -)"
     ```
 
@@ -240,6 +264,19 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
     ```shell
     git config --global commit.gpgsign true
     ```
+
+
+### Python <a name="system-python"></a>
+
+1. Install a default Python dist:
+
+    ```shell
+    pyenv install 3.8.12
+    ```
+    ```shell
+    pyenv global 3.8.12
+    ```
+    Run the same commands also in _Rosetta Terminal_.
 
 
 ## Configure Themes
