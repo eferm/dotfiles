@@ -115,6 +115,11 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
     alias l='ls -ohL'
     alias ll='ls -AohL'
     alias lll='ls -AlhO'
+    alias b='cd ..'
+    alias bb='cd ../..'
+    alias bbb='cd ../../..'
+    # https://github.com/pyenv/pyenv/issues/106#issuecomment-94921352
+    alias brew="env PATH=${PATH//$(pyenv root)\/shims:/} brew"
 
     export LS_COLORS=exfxfeaeBxxehehbadacea
     
