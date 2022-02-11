@@ -2,7 +2,8 @@
 
 Highly opinionated personal preferences minimum viable setup.
 
-This guide only known to be compatible with MacOS Monterey (version 12).
+This guide only known to be compatible with MacOS Monterey (version 12)
+on an M1 Mac.
 
 
 ### Table of Contents:
@@ -30,7 +31,8 @@ This guide only known to be compatible with MacOS Monterey (version 12).
 
 ### Hostname <a name="system-hostname"></a>
 
-Clean up hostname and computer name [[apple.stackexchange.com](https://apple.stackexchange.com/a/287775)]
+Clean up hostname and computer name
+[[apple.stackexchange.com](https://apple.stackexchange.com/a/287775)]
 
 1. Run commands:
 
