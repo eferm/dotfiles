@@ -29,7 +29,7 @@ on an M1 Mac.
 
 ## Configure System
 
-### Hostname <a name="system-hostname"></a>
+### Hostname (Optional) <a name="system-hostname"></a>
 
 Clean up hostname and computer name
 [[apple.stackexchange.com](https://apple.stackexchange.com/a/287775)]
@@ -170,7 +170,7 @@ Ref: [[scriptingosx.com](https://scriptingosx.com/zsh/)]
 
 Import GPG keys [[serverfault.com](https://serverfault.com/a/1040984)]
 
-1. Download keys and ownertrust files:
+1. Copy keys and ownertrust files from your backup:
     - `username@example.com.pub.asc`
     - `username@example.com.priv.asc`
     - `username@example.com.sub_priv.asc`
@@ -208,7 +208,7 @@ Import GPG keys [[serverfault.com](https://serverfault.com/a/1040984)]
 
 Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentication)]
 
-1. Generate new SSH key:
+1. Generate new SSH key (use corp. email on corp. laptop):
 
     ```shell
     ssh-keygen -t ed25519 -C "username@example.com"
@@ -256,11 +256,13 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 
     1. In GitHub → Profile → Settings → SSH and GPG keys, click _New SSH key_
     and paste the key.
+    
+    1. For corp. emails make sure to also add these to your GitHub account.
 
 
 ### Git <a name="system-git"></a>
 
-1. Run commands:
+1. Run commands (use corp. email for corp. laptop):
 
     ```shell
     git config --global user.name "Firstname Lastname"
