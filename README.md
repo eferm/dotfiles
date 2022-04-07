@@ -280,10 +280,10 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 1. Install a default Python dist:
 
     ```shell
-    pyenv install 3.8.12
+    pyenv install 3.8.13
     ```
     ```shell
-    pyenv global 3.8.12
+    pyenv global 3.8.13
     ```
     Run the same commands also in _Rosetta Terminal_.
 
