@@ -18,6 +18,7 @@ on an M1 Mac.
     1. [SSH](#system-ssh)
     1. [Git](#system-git)
     1. [Python](#system-python)
+    1. [Java](#system-java)
 1. [Configure Themes](#configure-themes)
     1. [Font](#themes-font)
     1. [Terminal](#themes-terminal)
@@ -286,6 +287,21 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
     pyenv global 3.8.13
     ```
     Run the same commands also in _Rosetta Terminal_.
+
+
+### Java <a name="system-java"></a>
+
+1. Install the latest JDK:
+
+    ```shell
+    brew install java
+    ```
+
+1. Symlink so MacOS can find the JDK [[mkyong.com](https://mkyong.com/java/how-to-install-java-on-mac-osx/)]
+
+    ```shell
+    sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+    ```
 
 
 ## Configure Themes
