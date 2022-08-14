@@ -304,7 +304,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
     sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
     ```
 
-### Chrome <a -name="system-chrome"></a>
+### Chrome <a name="system-chrome"></a>
 
 1. Run command:
 
