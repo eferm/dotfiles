@@ -309,7 +309,7 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
 1. Run command:
 
     ```shell
-    defaults write com.brave.Browser AppleEnableSwipeNavigateWithScrolls -bool FALSE```
+    defaults write com.brave.Browser AppleEnableSwipeNavigateWithScrolls -bool FALSE
     ```
 
 1. Restart browser.
