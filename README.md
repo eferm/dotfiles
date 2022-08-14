@@ -19,6 +19,7 @@ on an M1 Mac.
     1. [Git](#system-git)
     1. [Python](#system-python)
     1. [Java](#system-java)
+    1. [Chrome](#system-chrome)
 1. [Configure Themes](#configure-themes)
     1. [Font](#themes-font)
     1. [Terminal](#themes-terminal)
@@ -302,6 +303,17 @@ Configure SSH keys and agent [[github.com](https://docs.github.com/en/authentica
     ```shell
     sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
     ```
+
+### Chrome <a -name="system-chrome"></a>
+
+1. Run command:
+
+    ```shell
+    defaults write com.brave.Browser AppleEnableSwipeNavigateWithScrolls -bool FALSE```
+    ```
+
+1. Restart browser.
+
 
 
 ## Configure Themes
