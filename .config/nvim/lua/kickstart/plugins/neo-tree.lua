@@ -18,7 +18,15 @@ return {
   ---@module 'neo-tree'
   ---@type neotree.Config
   opts = {
+    default_component_configs = {
+      symlink_target = {
+        enabled = true,
+      },
+    },
     filesystem = {
+      filtered_items = {
+        visible = true,
+      },
       window = {
         mappings = {
           ['\\'] = 'close_window',
