@@ -79,5 +79,8 @@ brew:
 # https://github.com/Homebrew/homebrew-bundle
 packages: brew
 	@echo "=== Installing/updating packages ==="
+	@if [ -d "/Applications/Ghostty.app" ]; then \
+		xattr -cr /Applications/Ghostty.app 2>/dev/null || true; \
+	fi
 	brew update
 	brew bundle --file=$(HOME)/Brewfile
