@@ -230,6 +230,19 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   callback = function() vim.hl.on_yank() end,
 })
 
+-- Auto-reload files changed outside Neovim
+vim.o.autoread = true
+vim.api.nvim_create_autocmd('BufEnter', {
+  desc = 'Watch files for changes on disk',
+  callback = function()
+    local fname = vim.fn.expand '<afile>:p'
+    if fname ~= '' and vim.fn.filereadable(fname) == 1 then
+      local handle = vim.uv.new_fs_event()
+      handle:start(fname, {}, vim.schedule_wrap(function() vim.cmd 'checktime' end))
+    end
+  end,
+})
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
