@@ -10,7 +10,7 @@ git clone --bare git@github.com:eferm/dotfiles.git $HOME/.dotfiles
 
 # 2. Set up the alias and checkout
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
-dotfiles checkout
+dotfiles checkout   # if this fails, back up conflicting files first
 dotfiles config status.showUntrackedFiles no
 
 # 3. Run bootstrap

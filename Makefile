@@ -51,7 +51,7 @@ gpg:
 git:
 	@if [ ! -f "$(HOME)/.config/git/config.local" ]; then \
 		echo "WARN: ~/.config/git/config.local not found. Creating with template."; \
-		printf "# [user]\n#\tsigningkey = <YOUR_GPG_KEY_ID>\n# [commit]\n#\tgpgsign = true\n# [tag]\n#\tgpgSign = true\n# [includeIf \"gitdir:~/Code/org-name/\"]\n#\tpath = ~/Code/org-name/.gitconfig\n" > "$(HOME)/.config/git/config.local"; \
+		printf "# Find your key ID with: gpg --list-secret-keys --keyid-format=long\n# [user]\n#\tsigningkey = <YOUR_GPG_KEY_ID>\n# [commit]\n#\tgpgsign = true\n# [tag]\n#\tgpgSign = true\n# [includeIf \"gitdir:~/Code/org-name/\"]\n#\tpath = ~/Code/org-name/.gitconfig\n" > "$(HOME)/.config/git/config.local"; \
 		echo "Edit ~/.config/git/config.local to uncomment and fill in your settings."; \
 	elif ! grep -qv '^\s*\(#\|$$\)' "$(HOME)/.config/git/config.local"; then \
 		echo "WARN: git config.local has no active settings. Edit ~/.config/git/config.local"; \
