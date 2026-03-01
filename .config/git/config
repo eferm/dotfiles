@@ -1,9 +1,12 @@
 [user]
 	name = Emanuel Ferm
 	email = eferm@users.noreply.github.com
+; 	signingkey = <GPG SIGNATURE> ; gpg --list-secret-keys --keyid-format=long
+; [commit]
+; 	gpgsign = true
+; [tag]
+; 	gpgSign = true
 [github]
 	user = eferm
 [push]
 	autoSetupRemote = true
-[include]
-	path = ~/.config/git/config.local

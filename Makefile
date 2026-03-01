@@ -1,6 +1,6 @@
 # Bootstrap a new macOS machine — see README.md for setup instructions
 
-.PHONY: help all ssh gpg git brew packages
+.PHONY: help all ssh gpg git hooks brew packages
 .DEFAULT_GOAL := help
 
 help:
@@ -10,11 +10,12 @@ help:
 	@echo "  all       Run all targets"
 	@echo "  ssh       Check for SSH key"
 	@echo "  gpg       Check for GPG key"
-	@echo "  git       Check for git config.local"
+	@echo "  git       Check for git signing key"
+	@echo "  hooks     Install dotfiles git hooks"
 	@echo "  brew      Install Homebrew"
 	@echo "  packages  Install/update Homebrew packages"
 
-all: ssh gpg git brew packages
+all: ssh gpg git hooks brew packages
 	@echo "=== Done ==="
 	@echo "Restart your terminal to pick up .zshrc changes."
 	@echo "Open nvim to let Lazy install plugins."
@@ -49,15 +50,16 @@ gpg:
 	fi
 
 git:
-	@if [ ! -f "$(HOME)/.config/git/config.local" ]; then \
-		echo "WARN: ~/.config/git/config.local not found. Creating with template."; \
-		printf "# Find your key ID with: gpg --list-secret-keys --keyid-format=long\n# [user]\n#\tsigningkey = <YOUR_GPG_KEY_ID>\n# [commit]\n#\tgpgsign = true\n# [tag]\n#\tgpgSign = true\n# [includeIf \"gitdir:~/Code/org-name/\"]\n#\tpath = ~/Code/org-name/.gitconfig\n" > "$(HOME)/.config/git/config.local"; \
-		echo "Edit ~/.config/git/config.local to uncomment and fill in your settings."; \
-	elif ! grep -qv '^\s*\(#\|$$\)' "$(HOME)/.config/git/config.local"; then \
-		echo "WARN: git config.local has no active settings. Edit ~/.config/git/config.local"; \
+	@if git config --global user.signingkey >/dev/null 2>&1; then \
+		echo "OK: git signing key configured"; \
 	else \
-		echo "OK: git config.local found"; \
+		echo "WARN: No git signing key set. Run: gpg --list-secret-keys --keyid-format=long"; \
+		echo "Then uncomment and fill in signingkey in ~/.config/git/config"; \
 	fi
+
+hooks:
+	@ln -sf "$(HOME)/.config/git/hooks/pre-push" "$(HOME)/.dotfiles/hooks/pre-push"
+	@echo "OK: dotfiles hooks installed"
 
 # https://brew.sh/
 brew:

@@ -16,12 +16,26 @@ dotfiles config status.showUntrackedFiles no
 # 3. Run bootstrap
 source ~/.zshrc
 make all
+
+# 4. Create a machine-specific branch
+dotfiles checkout -b <machine-name>
+
+# 5. Configure machine-specific settings (e.g. git signing key)
+nvim ~/.config/git/config
+dotfiles commit -am "configure <machine-name>"
+
+# 6. Optionally remove bootstrap files from ~
+rm ~/Brewfile ~/Makefile ~/README.md
+dotfiles commit -am "clean up home"
 ```
 
-After setup, you can delete the non-dotfiles from `~` — they're only needed for bootstrapping:
+## Pulling shared updates
+
+When `main` is updated, merge into your machine branch:
 
 ```bash
-rm ~/Brewfile ~/Makefile ~/README.md
+dotfiles fetch origin
+dotfiles merge FETCH_HEAD
 ```
 
 ## Usage
