@@ -52,7 +52,8 @@ git:
 	@if [ -f "$(HOME)/.config/git/config.local" ]; then \
 		echo "OK: git config.local found"; \
 	else \
-		echo "FAIL: ~/.config/git/config.local not found. Create it with:"; \
+		echo "WARN: ~/.config/git/config.local not found. Creating empty file."; \
+		echo "Consider adding machine-specific settings:"; \
 		echo ""; \
 		echo "  [user]"; \
 		echo "  	signingkey = <YOUR_GPG_KEY_ID>"; \
@@ -63,7 +64,7 @@ git:
 		echo "  [includeIf \"gitdir:~/Code/org-name/\"]"; \
 		echo "  	path = ~/Code/org-name/.gitconfig"; \
 		echo ""; \
-		exit 1; \
+		touch "$(HOME)/.config/git/config.local"; \
 	fi
 
 # https://brew.sh/
