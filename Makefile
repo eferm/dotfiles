@@ -49,26 +49,14 @@ gpg:
 	fi
 
 git:
-	@if [ -s "$(HOME)/.config/git/config.local" ]; then \
-		echo "OK: git config.local found"; \
+	@if [ ! -f "$(HOME)/.config/git/config.local" ]; then \
+		echo "WARN: ~/.config/git/config.local not found. Creating with template."; \
+		printf "# [user]\n#\tsigningkey = <YOUR_GPG_KEY_ID>\n# [commit]\n#\tgpgsign = true\n# [tag]\n#\tgpgSign = true\n# [includeIf \"gitdir:~/Code/org-name/\"]\n#\tpath = ~/Code/org-name/.gitconfig\n" > "$(HOME)/.config/git/config.local"; \
+		echo "Edit ~/.config/git/config.local to uncomment and fill in your settings."; \
+	elif ! grep -qv '^\s*\(#\|$$\)' "$(HOME)/.config/git/config.local"; then \
+		echo "WARN: git config.local has no active settings. Edit ~/.config/git/config.local"; \
 	else \
-		if [ ! -f "$(HOME)/.config/git/config.local" ]; then \
-			echo "WARN: ~/.config/git/config.local not found. Creating empty file."; \
-			touch "$(HOME)/.config/git/config.local"; \
-		else \
-			echo "WARN: git config.local exists but is empty."; \
-		fi; \
-		echo "Consider adding machine-specific settings:"; \
-		echo ""; \
-		echo "[user]"; \
-		echo "	signingkey = <YOUR_GPG_KEY_ID>"; \
-		echo "[commit]"; \
-		echo "	gpgsign = true"; \
-		echo "[tag]"; \
-		echo "	gpgSign = true"; \
-		echo "[includeIf \"gitdir:~/Code/org-name/\"]"; \
-		echo "	path = ~/Code/org-name/.gitconfig"; \
-		echo ""; \
+		echo "OK: git config.local found"; \
 	fi
 
 # https://brew.sh/
