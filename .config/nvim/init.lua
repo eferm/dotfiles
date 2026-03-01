@@ -246,8 +246,11 @@ vim.api.nvim_create_autocmd('BufEnter', {
     if fname ~= '' and vim.fn.filereadable(fname) == 1 then
       local handle = vim.uv.new_fs_event()
       handle:start(fname, {}, vim.schedule_wrap(function()
-        vim.cmd 'checktime'
-        vim.cmd 'redraw'
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+          if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == '' then
+            vim.api.nvim_buf_call(buf, function() vim.cmd 'checktime' end)
+          end
+        end
       end))
     end
   end,
