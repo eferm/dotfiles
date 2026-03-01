@@ -18,7 +18,7 @@ source ~/.zshrc
 make all
 
 # 4. Create a machine-specific branch
-dotfiles checkout -b <machine-name>
+dotfiles checkout -b local
 
 # 5. Configure machine-specific settings (e.g. git signing key)
 nvim ~/.config/git/config

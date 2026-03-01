@@ -10,3 +10,5 @@
 	user = eferm
 [push]
 	autoSetupRemote = true
+; [includeIf "gitdir:~/Code/Org/"]
+; 	path = /Users/eferm/Code/Org/.gitconfig
