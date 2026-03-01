@@ -31,7 +31,7 @@ dotfiles ls-files            # list all tracked files
 dotfiles status              # check status
 dotfiles add ~/.some/file    # track a file
 dotfiles commit -m "msg"     # commit changes
-dotfiles push                # push to remote
+dotfiles push/pull           # push/pull to remote
 make                         # list available targets
 make all                     # run bootstrap checks and install packages
 ```
