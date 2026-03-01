@@ -60,14 +60,14 @@ git:
 		fi; \
 		echo "Consider adding machine-specific settings:"; \
 		echo ""; \
-		echo "  [user]"; \
-		echo "  	signingkey = <YOUR_GPG_KEY_ID>"; \
-		echo "  [commit]"; \
-		echo "  	gpgsign = true"; \
-		echo "  [tag]"; \
-		echo "  	gpgSign = true"; \
-		echo "  [includeIf \"gitdir:~/Code/org-name/\"]"; \
-		echo "  	path = ~/Code/org-name/.gitconfig"; \
+		echo "[user]"; \
+		echo "	signingkey = <YOUR_GPG_KEY_ID>"; \
+		echo "[commit]"; \
+		echo "	gpgsign = true"; \
+		echo "[tag]"; \
+		echo "	gpgSign = true"; \
+		echo "[includeIf \"gitdir:~/Code/org-name/\"]"; \
+		echo "	path = ~/Code/org-name/.gitconfig"; \
 		echo ""; \
 	fi
 
