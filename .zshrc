@@ -14,9 +14,9 @@ alias b='cd ..'
 alias bb='cd ../..'
 alias bbb='cd ../../..'
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
-alias lazydotfiles='lazygit --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+alias lazydot='lazygit --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+alias dotmake='make -f $HOME/.bootstrap.mk'
 alias filecounts='du -a | cut -d/ -f2 | sort | uniq -c | sort -nr'
-alias sshclaude='ssh eferm@j773 -t tmux attach -t claude'
 
 eval "$(starship init zsh)"
 
