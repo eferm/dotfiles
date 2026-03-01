@@ -1,7 +1,7 @@
 [user]
 	name = Emanuel Ferm
 	email = eferm@users.noreply.github.com
-	signingkey = F3AC9E09312A7E82
+	signingkey = 208CD9389DB444E1
 [github]
 	user = eferm
 [includeIf "gitdir:~/Code/GitHub/eferm/"]
