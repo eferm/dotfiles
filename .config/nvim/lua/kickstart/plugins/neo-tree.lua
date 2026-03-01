@@ -30,6 +30,11 @@ return {
       window = {
         mappings = {
           ['\\'] = 'close_window',
+          ['Y'] = function(state)
+            local node = state.tree:get_node()
+            vim.fn.setreg('+', node:get_id())
+            vim.notify('Copied: ' .. node:get_id())
+          end,
         },
       },
     },
