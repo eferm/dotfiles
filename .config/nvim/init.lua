@@ -98,6 +98,9 @@ vim.g.have_nerd_font = true
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
 
+-- Display tabs as 4 spaces wide
+vim.o.tabstop = 4
+
 -- Make line numbers default
 vim.o.number = true
 -- You can also add relative line numbers, to help with jumping.
@@ -232,13 +235,20 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 -- Auto-reload files changed outside Neovim
 vim.o.autoread = true
+vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter' }, {
+  desc = 'Check for file changes on focus/buffer switch',
+  callback = function() vim.cmd 'checktime' end,
+})
 vim.api.nvim_create_autocmd('BufEnter', {
   desc = 'Watch files for changes on disk',
   callback = function()
     local fname = vim.fn.expand '<afile>:p'
     if fname ~= '' and vim.fn.filereadable(fname) == 1 then
       local handle = vim.uv.new_fs_event()
-      handle:start(fname, {}, vim.schedule_wrap(function() vim.cmd 'checktime' end))
+      handle:start(fname, {}, vim.schedule_wrap(function()
+        vim.cmd 'checktime'
+        vim.cmd 'redraw'
+      end))
     end
   end,
 })
