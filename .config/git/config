@@ -3,5 +3,7 @@
 	email = eferm@users.noreply.github.com
 [github]
 	user = eferm
+[push]
+	autoSetupRemote = true
 [include]
 	path = ~/.config/git/config.local
