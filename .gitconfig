@@ -1,0 +1,14 @@
+[user]
+	name = Emanuel Ferm
+	email = eferm@users.noreply.github.com
+	signingkey = F3AC9E09312A7E82
+[github]
+	user = eferm
+[includeIf "gitdir:~/Code/GitHub/eferm/"]
+	path = /Users/eferm/Code/GitHub/eferm/.gitconfig
+[includeIf "gitdir:~/Code/GitHub/historized/"]
+	path = /Users/eferm/Code/GitHub/historized/.gitconfig
+[commit]
+	gpgsign = true
+[tag]
+	gpgSign = true
