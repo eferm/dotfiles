@@ -34,7 +34,7 @@ dotfiles commit -am "clean up home"
 When `main` is updated, merge into your machine branch:
 
 ```bash
-dotfiles fetch origin
+dotfiles fetch origin main
 dotfiles merge FETCH_HEAD
 ```
 
