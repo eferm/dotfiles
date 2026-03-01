@@ -51,10 +51,13 @@ gpg:
 git:
 	@if [ -s "$(HOME)/.config/git/config.local" ]; then \
 		echo "OK: git config.local found"; \
-	elif [ -f "$(HOME)/.config/git/config.local" ]; then \
-		echo "WARN: git config.local exists but is empty. Consider adding machine-specific settings."; \
 	else \
-		echo "WARN: ~/.config/git/config.local not found. Creating empty file."; \
+		if [ ! -f "$(HOME)/.config/git/config.local" ]; then \
+			echo "WARN: ~/.config/git/config.local not found. Creating empty file."; \
+			touch "$(HOME)/.config/git/config.local"; \
+		else \
+			echo "WARN: git config.local exists but is empty."; \
+		fi; \
 		echo "Consider adding machine-specific settings:"; \
 		echo ""; \
 		echo "  [user]"; \
@@ -66,7 +69,6 @@ git:
 		echo "  [includeIf \"gitdir:~/Code/org-name/\"]"; \
 		echo "  	path = ~/Code/org-name/.gitconfig"; \
 		echo ""; \
-		touch "$(HOME)/.config/git/config.local"; \
 	fi
 
 # https://brew.sh/
