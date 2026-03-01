@@ -49,8 +49,10 @@ gpg:
 	fi
 
 git:
-	@if [ -f "$(HOME)/.config/git/config.local" ]; then \
+	@if [ -s "$(HOME)/.config/git/config.local" ]; then \
 		echo "OK: git config.local found"; \
+	elif [ -f "$(HOME)/.config/git/config.local" ]; then \
+		echo "WARN: git config.local exists but is empty. Consider adding machine-specific settings."; \
 	else \
 		echo "WARN: ~/.config/git/config.local not found. Creating empty file."; \
 		echo "Consider adding machine-specific settings:"; \
