@@ -3,6 +3,7 @@
 --glob=!.bun
 --glob=!.cache
 --glob=!.claude
+--glob=!.dotfiles
 --glob=!.git
 --glob=!.local
 --glob=!Library

@@ -1,6 +1,3 @@
-# brew install coreutils starship zsh-syntax-highlighting zsh-autosuggestions font-fira-code-nerd-font vivid
-# starship preset nerd-font-symbols -o ~/.config/starship.toml
-
 export PATH="/opt/homebrew/bin:$PATH"
 export XDG_CONFIG_HOME="$HOME/.config"
 export LS_COLORS="$(vivid generate tokyonight-night)"
@@ -15,7 +12,6 @@ alias bb='cd ../..'
 alias bbb='cd ../../..'
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 alias lazydot='lazygit --git-dir=$HOME/.dotfiles --work-tree=$HOME'
-alias dotmake='make -f $HOME/.bootstrap.mk'
 alias filecounts='du -a | cut -d/ -f2 | sort | uniq -c | sort -nr'
 
 eval "$(starship init zsh)"
