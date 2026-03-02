@@ -1,6 +1,7 @@
 brew "coreutils"
 brew "fd"
 brew "gnupg"
+brew "lazygit"
 brew "neovim"
 brew "ripgrep"
 brew "starship"

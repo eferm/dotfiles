@@ -1,6 +1,3 @@
-# background-blur = true
-# background-opacity = 0.9
-# shell-integration = none # here to fix issue with nvim term stuff
 font-family = FiraCode Nerd Font
 font-size = 11
 mouse-scroll-multiplier = 1

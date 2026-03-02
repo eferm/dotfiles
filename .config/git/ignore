@@ -1,7 +1,3 @@
 .DS_Store
 .vscode/
 **/.claude/settings.local.json
-.config/git/config.local
-.ssh/id_*
-.ssh/*.pub
-.gnupg/
