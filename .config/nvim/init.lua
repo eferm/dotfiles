@@ -102,7 +102,6 @@ vim.g.have_nerd_font = true
 vim.o.tabstop = 4
 vim.o.shiftwidth = 4
 
-
 -- Make line numbers default
 vim.o.number = true
 -- You can also add relative line numbers, to help with jumping.
@@ -233,29 +232,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function() vim.hl.on_yank() end,
-})
-
--- Auto-reload files changed outside Neovim
-vim.o.autoread = true
-vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter' }, {
-  desc = 'Check for file changes on focus/buffer switch',
-  callback = function() vim.cmd 'checktime' end,
-})
-vim.api.nvim_create_autocmd('BufEnter', {
-  desc = 'Watch files for changes on disk',
-  callback = function()
-    local fname = vim.fn.expand '<afile>:p'
-    if fname ~= '' and vim.fn.filereadable(fname) == 1 then
-      local handle = vim.uv.new_fs_event()
-      handle:start(fname, {}, vim.schedule_wrap(function()
-        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-          if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == '' then
-            vim.api.nvim_buf_call(buf, function() vim.cmd 'checktime' end)
-          end
-        end
-      end))
-    end
-  end,
 })
 
 -- [[ Install `lazy.nvim` plugin manager ]]
@@ -932,6 +908,16 @@ require('lazy').setup({
     end,
   },
 
+  { -- Tree-sitter grammar for Ghostty configuration files
+    'bezhermoso/tree-sitter-ghostty',
+    build = 'make nvim_install',
+  },
+
+  { -- Real-time file watching
+    'awalland/nvim-file-watch',
+    opts = {},
+  },
+
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -946,7 +932,6 @@ require('lazy').setup({
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
-  require 'kickstart.plugins.tree-sitter-ghostty',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
