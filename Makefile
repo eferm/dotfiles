@@ -72,7 +72,7 @@ seed-git:
 			'; [tag]' \
 			';	gpgSign = true' \
 			'; [includeIf "gitdir:~/Code/Org/"]' \
-			';	path = /Users/eferm/Code/Org/.gitconfig' \
+			';	path = ~/Code/Org/.gitconfig' \
 			> "$(HOME)/.config/git/config"; \
 		echo "OK: created ~/.config/git/config"; \
 	fi
