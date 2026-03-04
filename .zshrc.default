@@ -1,5 +1,6 @@
 # vim: ft=zsh
 export PATH="/opt/homebrew/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 export XDG_CONFIG_HOME="$HOME/.config"
 export LS_COLORS="$(vivid generate tokyonight-night)"
 export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
