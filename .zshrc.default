@@ -16,6 +16,27 @@ alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 alias lazydot='lazygit --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 alias filecounts='du -a | cut -d/ -f2 | sort | uniq -c | sort -nr'
 
+safeclaude() {
+  local dir="$(pwd)"
+  claude \
+    --permission-mode acceptEdits \
+    --allowedTools \
+      "Edit($dir/**)" \
+      "Write($dir/**)" \
+      "Read" "Glob" "Grep" "Bash" \
+      "WebFetch" "WebSearch" "Agent" \
+      "NotebookEdit" "AskUserQuestion" \
+    --disallowedTools \
+      "Bash(git push *)" \
+      "Bash(git reset --hard *)" \
+      "Bash(rm -rf *)" \
+      "Bash(curl * | sh)" \
+      "Bash(curl * | bash)" \
+      "Bash(docker rm *)" \
+      "Bash(npm publish *)" \
+    "$@"
+}
+
 eval "$(starship init zsh)"
 
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh

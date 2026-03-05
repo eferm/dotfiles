@@ -1,0 +1,7 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "skipDangerousModePermissionPrompt": true
+}

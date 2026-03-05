@@ -25,6 +25,7 @@ all: install seed check
 
 # https://brew.sh
 # https://github.com/Homebrew/homebrew-bundle
+# https://code.claude.com/docs/en/overview
 .PHONY: install
 install:
 	@if ! command -v brew &>/dev/null; then \
@@ -34,6 +35,11 @@ install:
 	fi
 	brew update
 	brew bundle --file=$(HOME)/Brewfile
+	@if command -v claude &>/dev/null; then \
+		echo "OK: Claude Code already installed"; \
+	else \
+		curl -fsSL https://claude.ai/install.sh | bash; \
+	fi
 
 .PHONY: seed
 seed: seed-ssh seed-git seed-zsh
