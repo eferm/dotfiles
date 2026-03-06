@@ -3,5 +3,8 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true
   },
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "enabledPlugins": {
+    "skill-creator@claude-plugins-official": true
+  }
 }
