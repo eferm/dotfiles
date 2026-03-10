@@ -88,10 +88,3 @@ else
   [ "$pad" -lt 1 ] && pad=1
   echo "$(printf "%s%${pad}s%s" "$left" "" "$right")"
 fi
-
-# --- LINE 2: session_id + transcript_path ---
-
-sid_len=${#session_id}
-sid_pad=$((width - sid_len))
-[ "$sid_pad" -lt 1 ] && sid_pad=1
-printf "\033[2m%${width}s\033[0m" "$session_id"
