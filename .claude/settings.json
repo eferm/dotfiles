@@ -1,14 +1,44 @@
 {
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/statusline.sh"
-  },
   "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true
   },
-  "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true
+  "model": "opus",
+  "permissions": {
+    "allow": [
+      "WebFetch",
+      "WebSearch"
+    ],
+    "defaultMode": "acceptEdits",
+    "deny": [
+      "Bash(curl * | bash)",
+      "Bash(curl * | sh)",
+      "Bash(dbt *--full-refresh*)",
+      "Bash(docker rm *)",
+      "Bash(gh pr create *)",
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(npm publish *)",
+      "Bash(rm -rf *)"
+    ]
   },
-  "skipDangerousModePermissionPrompt": true
+  "sandbox": {
+    "autoAllowBashIfSandboxed": false,
+    "enabled": true,
+    "filesystem": {
+      "allowWrite": [
+        "//tmp"
+      ],
+      "denyRead": [
+        "~/.gnupg/**",
+        "~/.ssh/**"
+      ]
+    }
+  },
+  "skipDangerousModePermissionPrompt": false,
+  "statusLine": {
+    "command": "bash ~/.claude/statusline.sh",
+    "type": "command"
+  }
 }

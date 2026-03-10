@@ -4,3 +4,5 @@
 	email = eferm@users.noreply.github.com
 [github]
 	user = eferm
+[log]
+	showSignature = true
