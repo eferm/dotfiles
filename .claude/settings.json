@@ -1,38 +1,58 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true
   },
   "model": "opus",
   "permissions": {
     "allow": [
+      "Bash(dbt:*)",
+      "Bash(gh pr:*)",
+      "Glob",
+      "Grep",
+      "Read",
       "WebFetch",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:lfs.github.com)",
       "WebSearch"
+    ],
+    "ask": [
+      "Bash(curl * | *)",
+      "Bash(gh pr create *)",
+      "Bash(git push *)"
     ],
     "defaultMode": "acceptEdits",
     "deny": [
-      "Bash(curl * | bash)",
-      "Bash(curl * | sh)",
       "Bash(dbt *--full-refresh*)",
       "Bash(docker rm *)",
-      "Bash(gh pr create *)",
-      "Bash(git push *)",
+      "Bash(find * -delete)",
       "Bash(git reset --hard *)",
       "Bash(npm publish *)",
-      "Bash(rm -rf *)"
+      "Bash(rm -rf *)",
+      "Bash(wget * | *)"
     ]
   },
   "sandbox": {
-    "autoAllowBashIfSandboxed": false,
+    "allowUnsandboxedCommands": false,
+    "autoAllowBashIfSandboxed": true,
     "enabled": true,
+    "excludedCommands": [
+      "dbt:*",
+      "gh:*"
+    ],
     "filesystem": {
       "allowWrite": [
-        "//tmp"
-      ],
-      "denyRead": [
-        "~/.gnupg/**",
-        "~/.ssh/**"
+        "//tmp",
+        "~/.config/gcloud",
+        "~/.dbt/cloud-cli"
+      ]
+    },
+    "network": {
+      "allowUnixSockets": [
+        "~/.gnupg/S.gpg-agent",
+        "~/.gnupg/S.keyboxd"
       ]
     }
   },
