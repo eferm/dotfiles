@@ -15,6 +15,7 @@ alias bbb='cd ../../..'
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 alias lazydot='lazygit --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 alias filecounts='du -a | cut -d/ -f2 | sort | uniq -c | sort -nr'
+alias excel='open -a Microsoft\ Excel'
 
 eval "$(starship init zsh)"
 
