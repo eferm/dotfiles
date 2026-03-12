@@ -16,7 +16,8 @@
       "WebFetch(domain:api.github.com)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:lfs.github.com)",
-      "WebSearch"
+      "WebSearch",
+      "Write(/private/tmp/**)"
     ],
     "ask": [
       "Bash(curl * | *)",
