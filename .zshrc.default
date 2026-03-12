@@ -15,7 +15,7 @@ alias bbb='cd ../../..'
 alias filecounts='du -a | cut -d/ -f2 | sort | uniq -c | sort -nr'
 alias excel='open -a Microsoft\ Excel'
 
-alias dotgit='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 alias dotlazy='lazygit --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 
 alias obsgit='git --git-dir=$HOME/Documents/.obsgit --work-tree=$HOME/Documents/Obsidian'
