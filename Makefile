@@ -10,14 +10,14 @@ help:
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "Targets:"
-	@echo "  all        Run install, seed, check"
+	@echo "  all        Run install, seed, lfs, check"
 	@echo "  install    Install Homebrew and packages"
 	@echo "  seed       Seed config files from defaults"
 	@echo "  check      Verify SSH key, GPG key, Git signing key"
 	@echo "  clean      Back up config files and re-seed"
 
 .PHONY: all
-all: install seed check
+all: install seed lfs check
 	@echo ""
 	@echo "=== Done ==="
 	@echo "Restart your terminal to pick up .zshrc changes."
@@ -25,7 +25,8 @@ all: install seed check
 
 # https://brew.sh
 # https://github.com/Homebrew/homebrew-bundle
-# https://code.claude.com/docs/en/overview
+BREW := /opt/homebrew/bin/brew
+
 .PHONY: install
 install:
 	@if ! command -v brew &>/dev/null; then \
@@ -33,9 +34,8 @@ install:
 	else \
 		echo "OK: Homebrew already installed"; \
 	fi
-	brew update
-	brew bundle --file=$(HOME)/Brewfile
-	git lfs install
+	$(BREW) update
+	$(BREW) bundle --file=$(HOME)/Brewfile
 	@if command -v claude &>/dev/null; then \
 		echo "OK: Claude Code already installed"; \
 	else \
@@ -47,31 +47,38 @@ seed: seed-ssh seed-git seed-zsh
 
 .PHONY: seed-ssh
 seed-ssh:
+	@mkdir -p "$(HOME)/.ssh"
 	@if [ -f "$(HOME)/.ssh/config" ] && grep -q 'Include config.default' "$(HOME)/.ssh/config"; then \
 		echo "OK: ~/.ssh/config includes config.default"; \
+	elif [ -f "$(HOME)/.ssh/config" ]; then \
+		{ echo 'Include config.default'; echo ''; cat "$(HOME)/.ssh/config"; \
+		} > "$(HOME)/.ssh/config.tmp" && \
+		mv "$(HOME)/.ssh/config.tmp" "$(HOME)/.ssh/config"; \
+		echo "OK: prepended Include to existing ~/.ssh/config"; \
 	else \
-		if [ -f "$(HOME)/.ssh/config" ]; then \
-			bak="$(HOME)/.ssh/config.bak.$(TIMESTAMP)"; \
-			mv "$(HOME)/.ssh/config" "$$bak"; \
-			echo "Backed up ~/.ssh/config to $$bak"; \
-		fi; \
 		echo 'Include config.default' > "$(HOME)/.ssh/config"; \
 		echo "OK: created ~/.ssh/config"; \
 	fi
 
 .PHONY: seed-git
 seed-git:
+	@mkdir -p "$(HOME)/.config/git"
 	@if [ -f "$(HOME)/.config/git/config" ] && grep -q 'path = config.default' "$(HOME)/.config/git/config"; then \
 		echo "OK: ~/.config/git/config includes config.default"; \
+	elif [ -f "$(HOME)/.config/git/config" ]; then \
+		{ printf '%s\n' \
+			'[include]' \
+			'	path = config.default' \
+			''; \
+		cat "$(HOME)/.config/git/config"; \
+		} > "$(HOME)/.config/git/config.tmp" && \
+		mv "$(HOME)/.config/git/config.tmp" "$(HOME)/.config/git/config"; \
+		echo "OK: prepended include to existing ~/.config/git/config"; \
 	else \
-		if [ -f "$(HOME)/.config/git/config" ]; then \
-			bak="$(HOME)/.config/git/config.bak.$(TIMESTAMP)"; \
-			mv "$(HOME)/.config/git/config" "$$bak"; \
-			echo "Backed up ~/.config/git/config to $$bak"; \
-		fi; \
 		printf '%s\n' \
 			'[include]' \
 			'	path = config.default' \
+			'' \
 			'; [user]' \
 			';	signingkey = YOUR_KEY_HERE ; gpg --list-secret-keys --keyid-format=long' \
 			'; [commit]' \
@@ -88,18 +95,22 @@ seed-git:
 seed-zsh:
 	@if [ -f "$(HOME)/.zshrc" ] && grep -q 'source ~/.zshrc.default' "$(HOME)/.zshrc"; then \
 		echo "OK: ~/.zshrc sources .zshrc.default"; \
+	elif [ -f "$(HOME)/.zshrc" ]; then \
+		{ echo 'source ~/.zshrc.default'; echo ''; cat "$(HOME)/.zshrc"; \
+		} > "$(HOME)/.zshrc.tmp" && \
+		mv "$(HOME)/.zshrc.tmp" "$(HOME)/.zshrc"; \
+		echo "OK: prepended source to existing ~/.zshrc"; \
 	else \
-		if [ -f "$(HOME)/.zshrc" ]; then \
-			bak="$(HOME)/.zshrc.bak.$(TIMESTAMP)"; \
-			mv "$(HOME)/.zshrc" "$$bak"; \
-			echo "Backed up ~/.zshrc to $$bak"; \
-		fi; \
 		echo 'source ~/.zshrc.default' > "$(HOME)/.zshrc"; \
 		echo "OK: created ~/.zshrc"; \
 	fi
 
+.PHONY: lfs
+lfs:
+	PATH="/opt/homebrew/bin:$$PATH" git lfs install
+
 .PHONY: check
-check: check-ssh check-gpg check-git
+check: check-ssh check-gpg check-git check-lfs
 
 # https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
 .PHONY: check-ssh
@@ -131,11 +142,19 @@ check-gpg:
 
 .PHONY: check-git
 check-git:
-	@if grep -v '^[;#]' "$(HOME)/.config/git/config" | grep -q 'signingkey'; then \
+	@if git config --global user.signingkey >/dev/null 2>&1; then \
 		echo "OK: git signing key configured"; \
 	else \
 		echo "WARN: No git signing key set. Run: gpg --list-secret-keys --keyid-format=long"; \
 		echo "Then add signingkey to ~/.config/git/config"; \
+	fi
+
+.PHONY: check-lfs
+check-lfs:
+	@if git config --global filter.lfs.clean >/dev/null 2>&1; then \
+		echo "OK: Git LFS configured"; \
+	else \
+		echo "WARN: Git LFS not configured. Run: make lfs"; \
 	fi
 
 .PHONY: clean
@@ -148,4 +167,4 @@ clean:
 			echo "  $$f -> $$bak"; \
 		fi; \
 	done
-	@$(MAKE) seed
+	@$(MAKE) seed lfs
