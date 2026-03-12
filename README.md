@@ -59,19 +59,15 @@ acts as a safeguard when letting LLMs rip inside of a vault.
 # Create bare repo
 git init --bare ~/Documents/.obsgit
 
-# Enter work tree
-cd ~/Documents/Obsidian/
-
-# Set up LFS for attachments; assumes `brew install git-lfs`
-obsgit lfs install
-obsgit lfs track "Personal/Attachments/**"
-
 # Add files
+cd ~/Documents/Obsidian/
 obsgit add .gitignore  # maintained in dotfiles
-obsgit add .gitattributes
+obsgit add .gitattributes  # maintained in dotfiles
 obsgit add "Personal/"
 obsgit commit -m "initial import"
 ```
+
+Usage:
 
 ```bash
 # Snapshot vault state

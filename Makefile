@@ -35,6 +35,7 @@ install:
 	fi
 	brew update
 	brew bundle --file=$(HOME)/Brewfile
+	git lfs install
 	@if command -v claude &>/dev/null; then \
 		echo "OK: Claude Code already installed"; \
 	else \
