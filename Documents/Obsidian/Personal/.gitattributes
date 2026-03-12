@@ -1,1 +1,1 @@
-Personal/Attachments/** filter=lfs diff=lfs merge=lfs -text
+Attachments/** filter=lfs diff=lfs merge=lfs -text
