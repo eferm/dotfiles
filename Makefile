@@ -142,8 +142,8 @@ check-gpg:
 
 .PHONY: check-git
 check-git:
-	@if git config --global user.signingkey >/dev/null 2>&1; then \
-		echo "OK: git signing key configured"; \
+	@if git config user.signingkey >/dev/null 2>&1; then \
+		echo "OK: Git signing key configured"; \
 	else \
 		echo "WARN: No git signing key set. Run: gpg --list-secret-keys --keyid-format=long"; \
 		echo "Then add signingkey to ~/.config/git/config"; \
@@ -151,7 +151,7 @@ check-git:
 
 .PHONY: check-lfs
 check-lfs:
-	@if git config --global filter.lfs.clean >/dev/null 2>&1; then \
+	@if git config filter.lfs.clean >/dev/null 2>&1; then \
 		echo "OK: Git LFS configured"; \
 	else \
 		echo "WARN: Git LFS not configured. Run: make lfs"; \
