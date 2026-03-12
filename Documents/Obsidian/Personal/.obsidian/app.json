@@ -4,5 +4,6 @@
   "trashOption": "local",
   "useMarkdownLinks": true,
   "showUnsupportedFiles": true,
-  "alwaysUpdateLinks": false
+  "alwaysUpdateLinks": false,
+  "livePreview": false
 }
