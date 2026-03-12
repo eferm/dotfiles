@@ -1,5 +1,6 @@
 brew "coreutils"
 brew "fd"
+brew "git-delta"
 brew "git-lfs"
 brew "gnupg"
 brew "lazygit"
