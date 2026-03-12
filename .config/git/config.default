@@ -6,3 +6,7 @@
 	user = eferm
 [log]
 	showSignature = true
+[pull]
+	rebase = true
+[rebase]
+	autoStash = true
