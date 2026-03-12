@@ -47,7 +47,7 @@ acts as a safeguard when letting LLMs rip inside of a vault.
 └── Obsidian/            # vaults go in here; git work tree
     ├── .gitignore
     ├── .gitattributes   # LFS tracking rules
-    └── My Vault/        # an Obsidian vault folder
+    └── Personal/        # an Obsidian vault folder
         ├── .obsidian/   # ignored - Obsidian config
         ├── .trash/      # ignored - Obsidian trash
         └── Attachments/ # tracked via LFS
@@ -59,23 +59,17 @@ acts as a safeguard when letting LLMs rip inside of a vault.
 # Create bare repo
 git init --bare ~/Documents/.obsgit
 
-# Add aliases
-alias obsgit='git --git-dir=$HOME/Documents/.obsgit --work-tree=$HOME/Documents/Obsidian'
-alias obslazy='lazygit --git-dir=$HOME/Documents/.obsgit --work-tree=$HOME/Documents/Obsidian'
-
 # Enter work tree
 cd ~/Documents/Obsidian/
 
 # Set up LFS for attachments; assumes `brew install git-lfs`
 obsgit lfs install
-obsgit lfs track "My Vault/Attachments/**"
+obsgit lfs track "Personal/Attachments/**"
 
 # Add files
-echo '.obsidian/
-.trash/' > .gitignore
-obsgit add .gitignore
+obsgit add .gitignore  # maintained in dotfiles
 obsgit add .gitattributes
-obsgit add "My Vault/"
+obsgit add "Personal/"
 obsgit commit -m "initial import"
 ```
 
