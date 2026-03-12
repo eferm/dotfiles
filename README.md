@@ -72,6 +72,7 @@ Usage:
 ```bash
 # Snapshot vault state
 obsgit status
+obsgit lfs ls-files
 obsgit add -u
 obsgit commit -m "save state"
 
