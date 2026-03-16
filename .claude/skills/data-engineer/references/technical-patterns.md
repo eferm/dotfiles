@@ -98,7 +98,7 @@ How do we track changes to entity data over time?
 Take a complete snapshot of the entity table every day. Each snapshot is a partition.
 
 ```sql
--- In dbt, this is a snapshot or a partitioned incremental model
+-- In dbt, this is a partitioned incremental model (not a dbt snapshot — that's Pattern 2)
 -- Result: one partition per day, each containing the full state of the entity
 
 -- To query current state:
@@ -108,10 +108,16 @@ WHERE _snapshot_date = (SELECT MAX(_snapshot_date) FROM entity)
 -- To query state at any point in time:
 SELECT * FROM entity WHERE _snapshot_date = '2025-06-15'
 
--- To find what changed:
+-- To find what changed (two-way diff to catch inserts, updates, and deletes):
+-- Added or updated rows:
 SELECT * FROM entity WHERE _snapshot_date = '2025-06-16'
 EXCEPT DISTINCT
 SELECT * FROM entity WHERE _snapshot_date = '2025-06-15'
+
+-- Deleted rows:
+SELECT * FROM entity WHERE _snapshot_date = '2025-06-15'
+EXCEPT DISTINCT
+SELECT * FROM entity WHERE _snapshot_date = '2025-06-16'
 ```
 
 **When to use:** Default for any entity table that is small-to-medium (under ~10M rows per snapshot).
@@ -157,12 +163,24 @@ as an immutable append-only record. Derive the current state with a latest-value
 -- Raw change events (append-only)
 -- Each row: entity_id, field_changed, old_value, new_value, changed_at
 
--- Current state derived as a view:
+-- Step 1: Get the latest value per field per entity
+WITH latest_per_field AS (
+  SELECT entity_id, field_changed, new_value
+  FROM change_events
+  QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY entity_id, field_changed
+    ORDER BY changed_at DESC
+  ) = 1
+)
+
+-- Step 2: Pivot to one row per entity
 SELECT
   entity_id,
-  -- Use LAST_VALUE or array aggregation to get current state
-  ARRAY_AGG(STRUCT(field_changed, new_value) ORDER BY changed_at DESC LIMIT 1)[OFFSET(0)].*
-FROM change_events
+  MAX(IF(field_changed = 'name', new_value, NULL)) AS name,
+  MAX(IF(field_changed = 'status', new_value, NULL)) AS status,
+  MAX(IF(field_changed = 'email', new_value, NULL)) AS email
+  -- ... one per tracked field
+FROM latest_per_field
 GROUP BY entity_id
 ```
 
