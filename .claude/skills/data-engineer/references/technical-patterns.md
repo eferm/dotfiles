@@ -3,7 +3,8 @@
 This document contains modeling, pipeline, and design patterns for analytics engineering work.
 Read this file when producing tactical specs, technical guidance, or scoping data warehouse changes.
 
-All patterns assume BigQuery as the warehouse and dbt as the modeling layer.
+All patterns assume BigQuery as the warehouse and dbt as the modeling layer. The principles
+generalize, but syntax and capabilities differ across warehouses — adapt accordingly.
 
 ---
 
@@ -117,11 +118,12 @@ Storage is cheap. Simplicity and explainability are expensive.
 
 **Tradeoffs:** Duplicates a lot of data. For very large dimensions, consider Pattern 2 or 3.
 
-### Pattern 2: dbt Snapshots (SCD Type 2 via dbt)
+### Pattern 2: dbt Snapshots (SCD Type 2 via dbt) — fallback for large tables
 
-dbt's built-in snapshot functionality tracks changes using `dbt_valid_from` and `dbt_valid_to`
-columns. It uses either a `check` strategy (compares column values) or a `timestamp` strategy
-(uses an `updated_at` column).
+When daily full snapshots (Pattern 1) are too expensive, dbt's built-in snapshot functionality
+is an acceptable fallback. It tracks changes using `dbt_valid_from` and `dbt_valid_to` columns
+and uses either a `check` strategy (compares column values) or a `timestamp` strategy (uses an
+`updated_at` column).
 
 ```sql
 -- dbt snapshot config
@@ -236,14 +238,22 @@ SELECT * FROM ranked WHERE row_num = 1
 
 ### Pattern: Dedup Events by Event ID
 
-For event streams where each event has a unique ID but duplicates can arrive:
+For event streams where each event has a unique ID but duplicates can arrive (e.g., from
+at-least-once delivery or CDC replay), use deterministic ROW_NUMBER — not SELECT DISTINCT.
+Duplicated events often share an `event_id` but differ in ingestion metadata
+(`_airbyte_extracted_at`, sync timestamps, etc.), so DISTINCT will leave multiple copies.
 
 ```sql
-SELECT DISTINCT event_id, * EXCEPT(event_id)
+SELECT * EXCEPT(row_num)
 FROM {{ source('events', 'raw_events') }}
+QUALIFY ROW_NUMBER() OVER (
+  PARTITION BY event_id
+  ORDER BY _airbyte_extracted_at DESC  -- or another reliable tie-breaker
+) = 1
 ```
 
-Or if `DISTINCT` is too expensive on wide tables, use the ROW_NUMBER pattern keyed on `event_id`.
+Use `SELECT DISTINCT` only when you are certain the duplicate rows are byte-for-byte identical
+after excluding ingestion metadata — this is the narrower case.
 
 ### Pattern: Merge-Dedup for Incremental Models
 

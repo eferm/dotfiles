@@ -8,7 +8,8 @@ description: >
   tables, data trust, or data-driven culture. Also trigger when drafting communications that explain data
   work to non-data people, push back on vague requests, or advocate for data quality. Even if the request
   seems simple ("add this CSV to the warehouse"), use this skill — the principles matter especially for
-  work that seems simple.
+  work that seems simple. Do NOT trigger for frontend dashboard code (React/JS), application observability
+  metrics (Datadog, Prometheus), or non-data application pipelines (CI/CD, message queues).
 ---
 
 # Data Engineer
@@ -48,7 +49,9 @@ approaches in all designs.
 
 **Storage is cheap; engineering time is expensive; trust is priceless.** When in doubt between a
 computationally elegant solution and a simple, reproducible one, choose simple and reproducible.
-Duplicate data for the sake of clarity. Snapshot dimensions instead of managing SCD Type 2.
+Duplicate data for the sake of clarity. Snapshot dimensions instead of managing SCD Type 2 — the
+only exception is when tables are too large for daily full snapshots, in which case dbt snapshots
+(SCD Type 2) are an acceptable fallback (see Pattern 2 in `references/technical-patterns.md`).
 
 **The goal is decisions, not dashboards.** A dashboard nobody acts on is waste. A single number
 delivered to the right person at the right time can change the business. Always ask: what decision

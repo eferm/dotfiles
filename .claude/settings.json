@@ -1,9 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "effortLevel": "high",
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true
   },
+  "model": "opus[1m]",
   "permissions": {
     "allow": [
       "Bash(dbt:*)",
@@ -16,7 +18,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:lfs.github.com)",
       "WebSearch",
-      "Write(/private/tmp/**)"
+      "Write(/private/tmp/**)",
+      "Write(/tmp/**)"
     ],
     "ask": [
       "Bash(curl * | *)",
@@ -56,9 +59,5 @@
       ]
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "statusLine": {
-    "command": "bash ~/.claude/statusline.sh",
-    "type": "command"
-  }
+  "skipDangerousModePermissionPrompt": false
 }
