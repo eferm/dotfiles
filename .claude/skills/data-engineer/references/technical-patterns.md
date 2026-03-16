@@ -102,7 +102,8 @@ Take a complete snapshot of the entity table every day. Each snapshot is a parti
 -- Result: one partition per day, each containing the full state of the entity
 
 -- To query current state:
-SELECT * FROM entity WHERE _snapshot_date = CURRENT_DATE()
+SELECT * FROM entity
+WHERE _snapshot_date = (SELECT MAX(_snapshot_date) FROM entity)
 
 -- To query state at any point in time:
 SELECT * FROM entity WHERE _snapshot_date = '2025-06-15'
@@ -160,7 +161,7 @@ as an immutable append-only record. Derive the current state with a latest-value
 SELECT
   entity_id,
   -- Use LAST_VALUE or array aggregation to get current state
-  ARRAY_AGG(STRUCT(field, new_value) ORDER BY changed_at DESC LIMIT 1)[OFFSET(0)].*
+  ARRAY_AGG(STRUCT(field_changed, new_value) ORDER BY changed_at DESC LIMIT 1)[OFFSET(0)].*
 FROM change_events
 GROUP BY entity_id
 ```
