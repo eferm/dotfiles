@@ -108,16 +108,16 @@ WHERE _snapshot_date = (SELECT MAX(_snapshot_date) FROM entity)
 -- To query state at any point in time:
 SELECT * FROM entity WHERE _snapshot_date = '2025-06-15'
 
--- To find what changed (two-way diff to catch inserts, updates, and deletes):
+-- To find what changed (exclude _snapshot_date so rows are comparable):
 -- Added or updated rows:
-SELECT * FROM entity WHERE _snapshot_date = '2025-06-16'
+SELECT * EXCEPT(_snapshot_date) FROM entity WHERE _snapshot_date = '2025-06-16'
 EXCEPT DISTINCT
-SELECT * FROM entity WHERE _snapshot_date = '2025-06-15'
+SELECT * EXCEPT(_snapshot_date) FROM entity WHERE _snapshot_date = '2025-06-15'
 
 -- Deleted rows:
-SELECT * FROM entity WHERE _snapshot_date = '2025-06-15'
+SELECT * EXCEPT(_snapshot_date) FROM entity WHERE _snapshot_date = '2025-06-15'
 EXCEPT DISTINCT
-SELECT * FROM entity WHERE _snapshot_date = '2025-06-16'
+SELECT * EXCEPT(_snapshot_date) FROM entity WHERE _snapshot_date = '2025-06-16'
 ```
 
 **When to use:** Default for any entity table that is small-to-medium (under ~10M rows per snapshot).
@@ -160,7 +160,12 @@ If the source provides a change stream (CDC, event sourcing, audit log), store e
 as an immutable append-only record. Derive the current state with a latest-value query.
 
 ```sql
--- Raw change events (append-only)
+-- This example assumes field-level change events. If your CDC tool emits
+-- full-row records instead (common with Airbyte/Debezium), current state is
+-- simpler: ROW_NUMBER() OVER (PARTITION BY entity_id ORDER BY changed_at DESC) = 1,
+-- then filter out deletes (e.g., WHERE _cdc_deleted_at IS NULL or WHERE op != 'd').
+
+-- Raw change events (append-only, field-level)
 -- Each row: entity_id, field_changed, old_value, new_value, changed_at
 
 -- Step 1: Get the latest value per field per entity
@@ -247,7 +252,7 @@ WITH ranked AS (
     ) AS row_num
   FROM {{ source('raw', 'table') }}
 )
-SELECT * FROM ranked WHERE row_num = 1
+SELECT * EXCEPT(row_num) FROM ranked WHERE row_num = 1
 ```
 
 **Tie-breaking column choice matters.** Prefer, in order:
