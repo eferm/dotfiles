@@ -114,10 +114,11 @@ SELECT * EXCEPT(_snapshot_date) FROM entity WHERE _snapshot_date = '2025-06-16'
 EXCEPT DISTINCT
 SELECT * EXCEPT(_snapshot_date) FROM entity WHERE _snapshot_date = '2025-06-15'
 
--- Deleted rows:
+-- Deleted rows
 SELECT * EXCEPT(_snapshot_date) FROM entity WHERE _snapshot_date = '2025-06-15'
-EXCEPT DISTINCT
-SELECT * EXCEPT(_snapshot_date) FROM entity WHERE _snapshot_date = '2025-06-16'
+AND primary_key NOT IN (
+  SELECT primary_key FROM entity WHERE _snapshot_date = '2025-06-16'
+)
 ```
 
 **When to use:** Default for any entity table that is small-to-medium (under ~10M rows per snapshot).
@@ -268,7 +269,7 @@ Duplicated events often share an `event_id` but differ in ingestion metadata
 (`_airbyte_extracted_at`, sync timestamps, etc.), so DISTINCT will leave multiple copies.
 
 ```sql
-SELECT * EXCEPT(row_num)
+SELECT *
 FROM {{ source('events', 'raw_events') }}
 QUALIFY ROW_NUMBER() OVER (
   PARTITION BY event_id
