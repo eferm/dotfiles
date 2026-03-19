@@ -600,6 +600,13 @@ require('lazy').setup({
           if client and client:supports_method('textDocument/inlayHint', event.buf) then
             map('<leader>th', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle Inlay [H]ints')
           end
+
+          map('<leader>td', function() vim.diagnostic.enable(not vim.diagnostic.is_enabled()) end, '[T]oggle [D]iagnostics')
+
+          map('<leader>tw', function()
+            local s = vim.diagnostic.config().virtual_text == true and { severity = { min = vim.diagnostic.severity.ERROR } } or true
+            vim.diagnostic.config({ virtual_text = s, signs = s, underline = s })
+          end, '[T]oggle [W]arnings')
         end,
       })
 
