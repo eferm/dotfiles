@@ -45,6 +45,7 @@
     "excludedCommands": [
       "dbt:*",
       "gh:*",
+      "git:*",
       "uv:*"
     ],
     "filesystem": {
