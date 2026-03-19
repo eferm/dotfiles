@@ -10,6 +10,7 @@
     "allow": [
       "Bash(dbt:*)",
       "Bash(gh pr:*)",
+      "Bash(uv:*)",
       "Glob",
       "Grep",
       "Read",
@@ -43,7 +44,8 @@
     "enabled": true,
     "excludedCommands": [
       "dbt:*",
-      "gh:*"
+      "gh:*",
+      "uv:*"
     ],
     "filesystem": {
       "allowWrite": [
