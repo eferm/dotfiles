@@ -8,6 +8,8 @@
 	showSignature = true
 [pull]
 	rebase = true
+[push]
+	autoSetupRemote = true
 [rebase]
 	autoStash = true
 [filter "lfs"]
