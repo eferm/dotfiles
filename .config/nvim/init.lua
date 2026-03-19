@@ -605,7 +605,7 @@ require('lazy').setup({
 
           map('<leader>tw', function()
             local s = vim.diagnostic.config().virtual_text == true and { severity = { min = vim.diagnostic.severity.ERROR } } or true
-            vim.diagnostic.config({ virtual_text = s, signs = s, underline = s })
+            vim.diagnostic.config { virtual_text = s, signs = s, underline = s }
           end, '[T]oggle [W]arnings')
         end,
       })
@@ -827,10 +827,6 @@ require('lazy').setup({
         styles = {
           comments = { italic = false }, -- Disable italics in comments
         },
-        on_colors = function(c)
-          c.green, c.blue = c.blue, c.green
-          c.green1, c.blue1 = c.blue1, c.green1
-        end,
       }
 
       -- Load the colorscheme here.
