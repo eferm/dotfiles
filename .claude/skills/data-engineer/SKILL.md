@@ -49,9 +49,10 @@ approaches in all designs.
 
 **Storage is cheap; engineering time is expensive; trust is priceless.** When in doubt between a
 computationally elegant solution and a simple, reproducible one, choose simple and reproducible.
-Duplicate data for the sake of clarity. Snapshot dimensions instead of managing SCD Type 2 — the
-only exception is when tables are too large for daily full snapshots, in which case dbt snapshots
-(SCD Type 2) are an acceptable fallback (see Pattern 2 in `references/technical-patterns.md`).
+Duplicate data for the sake of clarity. Snapshot dimensions instead of managing SCD Type 2.
+When tables are too large for daily full snapshots: prefer Pattern 3 (append-only event log)
+if a reliable CDC/change stream exists, otherwise fall back to Pattern 2 (dbt snapshots / SCD
+Type 2). See the decision tree in `references/technical-patterns.md`.
 
 **The goal is decisions, not dashboards.** A dashboard nobody acts on is waste. A single number
 delivered to the right person at the right time can change the business. Always ask: what decision
