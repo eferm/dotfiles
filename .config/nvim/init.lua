@@ -820,6 +820,10 @@ require('lazy').setup({
         styles = {
           comments = { italic = false }, -- Disable italics in comments
         },
+        on_colors = function(c)
+          c.green, c.blue = c.blue, c.green
+          c.green1, c.blue1 = c.blue1, c.green1
+        end,
       }
 
       -- Load the colorscheme here.
