@@ -29,11 +29,6 @@ fmt_k() {
 parent=$(dirname "$cwd")
 dir="$(basename "$parent")/$(basename "$cwd")"
 
-# Terminal width for right-alignment (subtract 7: 6 for UI chrome + 1 for newline)
-width=$(stty size </dev/tty 2>/dev/null | awk '{print $2}')
-width=${width:-80}
-width=$((width - 6))
-
 # --- LINE 1: dir + git | model + tokens + context ---
 
 left=$(printf "\033[34m%s\033[0m" "$dir")
@@ -78,13 +73,4 @@ total_k=$(fmt_k "$ctx_size")
 right_plain="${model_id} · ${used_k}/${total_k} tokens (${used}%)"
 right="$right_plain"
 
-# Right-align line 1, but collapse when context >= 60% to leave room for notifications
-left_len=${#left_plain}
-right_len=${#right_plain}
-if [ "$used" -ge 60 ]; then
-  echo "$(printf "%s  %s" "$left" "$right")"
-else
-  pad=$((width - left_len - right_len))
-  [ "$pad" -lt 1 ] && pad=1
-  echo "$(printf "%s%${pad}s%s" "$left" "" "$right")"
-fi
+echo "$(printf "%s  %s" "$left" "$right")"
