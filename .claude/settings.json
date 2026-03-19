@@ -10,6 +10,7 @@
     "allow": [
       "Bash(dbt:*)",
       "Bash(gh pr:*)",
+      "Bash(git:*)",
       "Bash(uv:*)",
       "Glob",
       "Grep",
