@@ -3,6 +3,19 @@
 This reference covers how to structure Python projects at different scales, following the
 principles in the software-architect skill.
 
+## Scope
+
+This reference is **not** a general guide to project layout, packaging, testing, or
+tooling — every language ecosystem has its own conventions for those (e.g., for Python:
+PEP 8, PEP 517, PEP 621, etc). Consult the best-practice guidelines for your language first.
+
+What this file covers is narrower: how to organize modules and packages **in support of
+the architectural boundaries** described in the main skill — the core/shell split,
+dependency inversion, and separation of infrastructure from logic. The layouts below
+show where those boundaries should be visible in the directory tree.
+
+---
+
 ## Guiding Principle
 
 File structure should mirror architectural boundaries. The core/shell split, the separation
@@ -19,10 +32,11 @@ For a small service, script, or tool — keep it flat. Don't create packages for
 
 ```
 my_service/
-├── main.py              # Shell: entry point, config loading, wiring
-├── domain.py            # Core: data types, pure logic
-├── storage.py           # Infrastructure: database, file I/O
-└── notifications.py     # Infrastructure: email, SMS, webhooks
+├── pyproject.toml               # Project metadata and dependencies
+├── main.py                      # Shell: entry point, config loading, wiring
+├── domain.py                    # Core: data types, pure logic
+├── storage.py                   # Infrastructure: database, file I/O
+└── notifications.py             # Infrastructure: email, SMS, webhooks
 ```
 
 **Rules at this scale:**
@@ -40,6 +54,7 @@ within each layer.
 
 ```
 my_service/
+├── pyproject.toml       # Project metadata and dependencies
 ├── main.py              # Entry point: config, wiring, startup
 ├── config.py            # Config dataclass + load_config()
 │
@@ -69,7 +84,7 @@ my_service/
 - `interfaces/` converts external types to domain types at the boundary
 - `infra/` implements Protocols defined in `domain/` or `protocols.py`
 - `main.py` is the composition root — it creates instances and wires them together
-- `config.py` is the only file that touches `os.environ`
+- `config.py` is the only file that reads environment variables
 
 ### Why layer-first, not feature-first?
 
@@ -87,8 +102,10 @@ keep. Each feature or domain area is self-contained, with its own core, shell, a
 
 ```
 my_service/
+├── pyproject.toml
 ├── main.py
 ├── config.py
+│
 ├── shared/                  # Cross-cutting domain types and utilities
 │   ├── __init__.py
 │   ├── types.py             # Shared value objects (Money, Address, etc.)
@@ -114,10 +131,10 @@ my_service/
 │   ├── email.py             # Email implementation
 │   └── sms.py               # SMS implementation
 │
-└── infra/                   # Truly cross-cutting infrastructure
-    ├── __init__.py
-    ├── database.py          # Connection management, base classes
-    └── middleware.py         # HTTP middleware, error handling
+├── infra/                   # Truly cross-cutting infrastructure
+│   ├── __init__.py
+│   ├── database.py          # Connection management, base classes
+│   └── middleware.py         # HTTP middleware, error handling
 ```
 
 **Rules at this scale:**
@@ -131,6 +148,19 @@ my_service/
 
 ---
 
+## Flat Layout vs Src Layout
+
+The examples above use flat layout — source packages sit at the project root alongside
+the project manifest (e.g., `pyproject.toml`, `package.json`). This is the simpler choice
+for applications and services.
+
+For installable libraries, consider src layout (`src/my_package/`). It prevents the
+working directory from shadowing the installed package during testing, ensuring tests
+always run against the installed version. The tradeoff is a slightly deeper directory
+tree and requiring an install step during development.
+
+---
+
 ## File Naming Conventions
 
 - **One module, one responsibility.** If a file has 500+ lines, it's probably doing too much.
@@ -139,8 +169,10 @@ my_service/
   than `service.py` when the file contains pricing logic.
 - **Avoid generic names:** `utils.py`, `helpers.py`, `common.py`, `misc.py`. These become
   dumping grounds. Find the domain concept the code belongs to.
-- **`__init__.py` should be thin.** Use it for public API re-exports, not logic.
-  `from .types import Order, OrderItem` is fine. Business logic in `__init__.py` is not.
+- **Package entry points should ideally be empty.** An empty `__init__.py` (or no entry
+  point at all, in languages that support it) is the simplest default. Re-exporting a
+  curated public API (e.g., `from .types import Order, OrderItem`) is a more advanced
+  pattern and also fine — but business logic in entry points is not.
 
 ---
 
@@ -155,16 +187,18 @@ These rules make the architectural boundaries machine-checkable:
 2. **Infrastructure modules import domain types but domain never imports infrastructure.**
    The dependency arrow points inward.
 
-3. **`config.py` is the only module that imports `os`.** Everything else receives config
-   as constructor arguments.
+3. **Only the config module reads environment variables.** Everything else receives
+   configuration as constructor arguments.
 
 4. **Feature modules don't import each other's internals.** They communicate through
    `shared/` types or through Protocols passed at construction.
 
-These rules can be enforced with import-linter, custom flake8 rules, or a simple CI script:
+These rules should be enforced automatically in CI. The specific tooling varies by
+ecosystem (e.g., `import-linter` for Python, ESLint rules for TypeScript), but even
+a simple grep in CI is better than nothing:
 
 ```bash
-# Fail if domain/ imports from infra/
+# Example (Python): fail if domain/ imports from infra/
 grep -rn "from.*infra" domain/ && echo "VIOLATION: domain imports infra" && exit 1
 ```
 
@@ -201,3 +235,31 @@ def main():
 
 The composition root is the only "god function" in the system — it knows about everything,
 but it does almost nothing. It just connects the pieces and starts the engine.
+
+---
+
+## Review Checklist
+
+**Dependency direction (Import Rules 1–2)**
+- [ ] Does any domain module import from `infra/`, `interfaces/`, or external frameworks? Quick check: `grep -rn "from.*infra\|from.*interfaces" domain/`. Move the dependency to a Protocol in `domain/`; implement it in `infra/`.
+- [ ] Does infrastructure import domain types only inward, never the reverse? The dependency arrow must point from shell to core, never outward.
+
+**Environment and config (Import Rule 3, Composition Root)**
+- [ ] Does any module other than the config module read environment variables? Quick check: `grep -rn "os\.environ\|os\.getenv" --include="*.py" | grep -v config.py`. Move reads to `config.py`; pass config as constructor arguments.
+- [ ] Is there exactly one composition root? If wiring logic is scattered across multiple files, consolidate into `main.py` or `app.py`.
+
+**Feature isolation (Import Rule 4, Large Projects)**
+- [ ] Do feature modules import each other's internals? Quick check: `grep -rn "from orders\." pricing/`. Communicate through `shared/` types or Protocols injected at construction.
+- [ ] Has `shared/` accumulated feature-specific types? Move them back to the owning feature; `shared/` is only for types that genuinely span multiple features.
+
+**File naming (File Naming Conventions 1–4)**
+- [ ] Are there files named `utils.py`, `helpers.py`, `common.py`, or `misc.py`? Find the domain concept the code belongs to and rename accordingly.
+- [ ] Are files named for their layer (`service.py`, `handler.py`) rather than their content? Rename to reflect what they contain: `pricing.py`, `reconciliation.py`.
+- [ ] Do package entry points (`__init__.py`, `index.ts`) contain business logic? Extract logic into a named module; keep entry points to re-exports only.
+
+**Scale and structure (Small / Medium / Large Projects)**
+- [ ] Has the project outgrown its organizational style? Flat layout with 15 files needs layer-first; layer-first with 30+ files across many domains needs feature-first. Restructure when navigating the directory tree becomes harder than the code itself.
+- [ ] Can a new reader see the core/shell boundary from the directory listing alone? If not, restructure so that domain, infrastructure, and interface code live in clearly separated directories or files.
+
+**CI enforcement (Import Rules, Enforceable)**
+- [ ] Are architectural boundary rules enforced automatically? Add a CI check (e.g., `import-linter` for Python, ESLint rules for TypeScript, or a grep-based script) that fails on boundary violations.
