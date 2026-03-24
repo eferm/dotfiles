@@ -1,6 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "effortLevel": "high",
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true
@@ -10,6 +9,7 @@
     "allow": [
       "Bash(dbt:*)",
       "Bash(gh pr:*)",
+      "Bash(gh search:*)",
       "Bash(git:*)",
       "Bash(uv:*)",
       "Glob",
@@ -21,9 +21,11 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:lfs.github.com)",
       "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:registry.npmjs.org)",
       "WebSearch",
       "Write(/private/tmp/**)",
-      "Write(/tmp/**)"
+      "Write(/tmp/**)",
+      "mcp__ide__getDiagnostics"
     ],
     "ask": [
       "Bash(curl * | *)",
