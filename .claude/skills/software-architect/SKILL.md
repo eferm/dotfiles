@@ -3,15 +3,15 @@ name: software-architect
 description: >
   Applies deep software design principles when writing or reviewing substantial Python code.
   Covers: deep modules, minimal/no optional parameters, functional core with imperative shell,
-  dependency inversion, separation of infrastructure from logic, branch reduction, error handling
-  at boundaries, typed configuration, structured module organization, naming conventions, and
-  async patterns. Use this skill whenever Claude is asked to build, refactor, design, or review
-  classes, modules, services, or multi-file systems — even if the user doesn't mention
-  "design principles" or "architecture." Trigger for any task involving code with real structure:
-  designing a class, building a service, refactoring a module, reviewing architecture, organizing
-  a package, or writing anything beyond a throwaway script. Do NOT trigger for one-liners,
-  quick shell commands, data exploration, or simple scripts where architectural overhead would
-  be absurd.
+  dependency inversion, separation of infrastructure from logic, state and type design,
+  mutation contracts, branch reduction, error handling at boundaries, typed configuration,
+  structured module organization, naming conventions, and async patterns. Use this skill whenever
+  Claude is asked to build, refactor, design, or review classes, modules, services, or multi-file
+  systems — even if the user doesn't mention "design principles" or "architecture." Trigger for
+  any task involving code with real structure: designing a class, building a service, refactoring
+  a module, reviewing architecture, organizing a package, or writing anything beyond a throwaway
+  script. Do NOT trigger for one-liners, quick shell commands, data exploration, or simple scripts
+  where architectural overhead would be absurd.
 ---
 
 # Software Architect
@@ -196,9 +196,161 @@ def format_order_summary(order: Order) -> str: ...
 If you genuinely cannot avoid a default, it should be for a value that is truly universal and
 whose absence would be surprising (e.g., `encoding="utf-8"`), not for toggling behavior.
 
+### Pick a mutation contract
+
+If a function mutates its input, return `None`. If it returns a new value, clone first. Never
+mutate the input and return the same reference — callers cannot tell whether to use the return
+value or the original, and bugs from this ambiguity are silent.
+
+```python
+# Bad: mutates AND returns the same object
+def with_pending_action(state: AppState, action: str) -> AppState:
+    state.pending_action = action
+    return state
+
+# Good: mutate, return None
+def apply_pending_action(state: AppState, action: str) -> None:
+    state.pending_action = action
+
+# Also good: clone, return new (Pydantic)
+def with_pending_action(state: AppState, action: str) -> AppState:
+    return state.model_copy(update={"pending_action": action})
+```
+
 ---
 
-## Part 3: Code Structure
+## Part 3: State & Type Design
+
+Every optional field is a question the rest of the codebase must answer every time it touches
+that data. Every boolean flag doubles the theoretical state space. Design types so that wrong
+states are unrepresentable.
+
+### Discriminated unions over optional bags
+
+When a model has fields that are only valid in certain states, use a discriminated union so
+each state carries exactly the fields it needs. This eliminates impossible field combinations
+at the type level — no runtime checks needed.
+
+```python
+from typing import Annotated, Literal, Union
+from pydantic import BaseModel, Discriminator
+
+# Bad: when status is 'idle', should gateway/transaction_id exist? The type doesn't say.
+class PaymentStateBad(BaseModel):
+    status: Literal["idle", "processing", "settled"]
+    gateway: Literal["stripe", "paypal"] | None = None
+    transaction_id: str | None = None
+    initiated_at: str | None = None
+    settled_at: str | None = None
+
+# Good: each status carries exactly the fields it needs.
+class IdlePayment(BaseModel):
+    status: Literal["idle"] = "idle"
+
+class ProcessingPayment(BaseModel):
+    status: Literal["processing"] = "processing"
+    gateway: Literal["stripe", "paypal"]
+    transaction_id: str
+    initiated_at: str
+
+class SettledPayment(BaseModel):
+    status: Literal["settled"] = "settled"
+    gateway: Literal["stripe", "paypal"]
+    transaction_id: str
+    settled_at: str
+
+PaymentState = Annotated[
+    Union[IdlePayment, ProcessingPayment, SettledPayment],
+    Discriminator("status"),
+]
+```
+
+### Null over sentinels
+
+Use `None` to represent absence. Sentinel values like `'none'`, `'unknown'`, or `-1` are values
+that pretend to be real data. `None` is honest — it forces the caller to handle the absent case
+explicitly rather than letting a sentinel sneak through as if it were meaningful.
+
+```python
+# Bad: 'none' is not an action — it is the absence of one.
+PendingAction = Literal["none", "confirm-address", "select-shipping"]
+
+# Good
+PendingAction = Literal["confirm-address", "select-shipping"]
+
+class OrderState(BaseModel):
+    pending_action: PendingAction | None = None
+```
+
+### Phased composition over grab-bags
+
+When a model has many optional fields, group related fields into sub-models where all fields
+are required. The consumer checks one optional instead of eight individual fields. When the
+group exists, all its fields are guaranteed present.
+
+```python
+# Bad: 20+ optional fields, every consumer does profile.first_name or defaults.first_name
+class UserProfileBad(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    billing_address: str | None = None
+    card_last4: str | None = None
+
+# Good: check one optional instead of eight
+class Identity(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+
+class Billing(BaseModel):
+    address: str
+    card_last4: str
+
+class UserProfile(BaseModel):
+    identity: Identity | None = None
+    billing: Billing | None = None
+```
+
+### Brand identical primitives
+
+When two concepts share the same underlying type (both are `str`), use `NewType` to prevent
+accidental substitution at static analysis time with zero runtime cost.
+
+```python
+from typing import NewType
+
+# Bad: a function accepting UserId will happily take a TeamId
+UserId = str
+TeamId = str
+
+# Good: mypy/pyright catch the mix-up
+UserId = NewType("UserId", str)
+TeamId = NewType("TeamId", str)
+```
+
+### Delete dead variants
+
+If a type has a variant that is never constructed anywhere in the codebase, delete it. An
+unused variant misleads readers into thinking a lifecycle or code path exists when it does not.
+
+---
+
+## Part 4: Code Structure
+
+### Derive, don't store
+
+When a value can be computed from data you already have, do not store it as a separate field.
+The best source to derive from is an event stream or existing model relationships. Every stored
+boolean is a sync obligation — a place where the stored value can drift from truth.
+
+When you cannot derive (genuine state machines, temporal data, or when the derivation would be
+more complex than the stored value), encapsulate the mutable state in the smallest possible
+scope. A closure is better than a class field — nothing outside it can create inconsistency.
+
+The debugging payoff: derived state means data-in, answer-out testing. No mocking, no timing
+reproduction. The bug is in the source data or in the pure derivation function.
 
 ### Reduce branches
 
@@ -216,6 +368,12 @@ Strategies:
 
 A function with one `if` is readable. A function with nested `if/elif/else` three levels deep
 is a maintenance hazard.
+
+When a long if-chain returns a similar shape from every branch, the logic is a lookup table
+encoded as code. Convert it to a dictionary keyed by the discriminant — the function becomes
+`return TABLE.get(key)`. Adding a new case means adding a data entry, not a branch. Only keep
+branches as code when they involve genuinely different control flow, not just different return
+values.
 
 ### Separate pure from impure (actions, calculations, data)
 
@@ -259,7 +417,7 @@ indirection without hiding meaningful complexity, it's not earning its keep.
 
 ---
 
-## Part 4: Error Handling
+## Part 5: Error Handling
 
 ### Let exceptions propagate; catch at boundaries
 
@@ -303,7 +461,7 @@ def handle_activation(request: Request, db: Database) -> Response:
 
 ---
 
-## Part 5: Configuration
+## Part 6: Configuration
 
 ### Read environment once at the edge, pass typed config
 
@@ -337,7 +495,7 @@ whole config object and let the component rummage through it.
 
 ---
 
-## Part 6: Logging
+## Part 7: Logging
 
 ### Logging is a side effect — push it to the shell
 
@@ -366,7 +524,7 @@ This makes logs searchable and parseable by observability tools.
 
 ---
 
-## Part 7: Naming Conventions
+## Part 8: Naming Conventions
 
 ### Names reveal intent and abstraction level
 
@@ -398,7 +556,7 @@ This makes logs searchable and parseable by observability tools.
 
 ---
 
-## Part 8: Async Patterns
+## Part 9: Async Patterns
 
 ### Async follows the same principles — don't let it erode structure
 

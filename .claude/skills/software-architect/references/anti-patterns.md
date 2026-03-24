@@ -24,6 +24,13 @@ bad, and shows the corrected version.
 16. [Logging in Core Logic](#16-logging-in-core-logic)
 17. [Async Infecting the Core](#17-async-infecting-the-core)
 18. [Naming Violations](#18-naming-violations)
+19. [Cached Flags (Derive, Don't Store)](#19-cached-flags)
+20. [Optional Bags (Discriminated Unions)](#20-optional-bags)
+21. [Sentinel Values](#21-sentinel-values)
+22. [Grab-Bag Models (Phased Composition)](#22-grab-bag-models)
+23. [Unbranded Primitives](#23-unbranded-primitives)
+24. [Ambiguous Mutation Contract](#24-ambiguous-mutation-contract)
+25. [Unscoped Mutable State](#25-unscoped-mutable-state)
 
 ---
 
@@ -927,3 +934,424 @@ class OrderAccumulator:
 
 Every name tells the reader what it holds or does. No `Manager`, no `process`, no shadowed
 builtins, no type-in-name variables.
+
+---
+
+## 19. Cached Flags
+
+### Before: Four booleans to answer one question
+
+```python
+from pydantic import BaseModel
+
+
+class ThreadState(BaseModel):
+    was_interrupted: bool
+    did_assistant_finish: bool
+    did_assistant_error: bool
+    was_tool_call_only: bool
+
+
+def should_show_footer(state: ThreadState) -> bool:
+    return (
+        state.did_assistant_finish
+        and not state.was_interrupted
+        and not state.did_assistant_error
+        and not state.was_tool_call_only
+    )
+```
+
+Four fields to answer one question, with four mutation sites elsewhere keeping them in sync.
+
+### After: Derive from evidence
+
+```python
+def should_show_footer(events: list[SessionEvent]) -> bool:
+    latest = get_latest_assistant_message(events)
+    if not latest:
+        return False
+    return latest.completed and not latest.error and latest.finish != "tool-calls"
+```
+
+The answer is computed from events that already exist. Testing is data-in, answer-out:
+
+```python
+def test_footer_hidden_for_aborted_runs():
+    events = load_events("./fixtures/aborted-session.jsonl")
+    assert should_show_footer(events) is False
+```
+
+No mocking or timing reproduction. The bug is in the events or in the pure function.
+
+---
+
+## 20. Optional Bags (Make Impossible States Impossible)
+
+This is one of the most fundamental patterns in type design. When a model uses optional fields
+to represent different states, the type system permits combinations that make no domain sense —
+and every function that touches the model must defensively handle nonsense it should never have
+been possible to create. The fix is to make wrong states unrepresentable: if the data can't
+exist in an invalid shape, no code anywhere needs to check for one.
+
+### Before: Optional fields that allow impossible states
+
+```python
+from pydantic import BaseModel
+from typing import Literal
+
+
+class PaymentState(BaseModel):
+    status: Literal["idle", "processing", "settled"]
+    gateway: Literal["stripe", "paypal"] | None = None
+    transaction_id: str | None = None
+    initiated_at: str | None = None
+    settled_at: str | None = None
+```
+
+When `status` is `'idle'`, should `gateway` or `transaction_id` exist? The type doesn't say.
+Nothing prevents constructing `PaymentState(status="idle", settled_at="2024-01-01")` — a
+payment that settled without ever being processed. Every consumer must guess, defensively
+check, or silently produce wrong answers.
+
+### After: Discriminated union — each state carries exactly its fields
+
+```python
+from typing import Annotated, Literal, Union
+
+from pydantic import BaseModel, Discriminator
+
+
+class IdlePayment(BaseModel):
+    status: Literal["idle"] = "idle"
+
+
+class ProcessingPayment(BaseModel):
+    status: Literal["processing"] = "processing"
+    gateway: Literal["stripe", "paypal"]
+    transaction_id: str
+    initiated_at: str
+
+
+class SettledPayment(BaseModel):
+    status: Literal["settled"] = "settled"
+    gateway: Literal["stripe", "paypal"]
+    transaction_id: str
+    settled_at: str
+
+
+PaymentState = Annotated[
+    Union[IdlePayment, ProcessingPayment, SettledPayment],
+    Discriminator("status"),
+]
+```
+
+An idle payment with a `settled_at` is now a type error, not a runtime surprise. A `match` on
+`status` gives you typed access to exactly the fields that exist in that state. No defensive
+checks needed — the impossible state was never created.
+
+---
+
+## 21. Sentinel Values
+
+### Before: Sentinel pretends to be a real value
+
+```python
+from typing import Literal
+
+PendingAction = Literal["none", "confirm-address", "select-shipping"]
+```
+
+`'none'` is not an action — it is the absence of one. But the type treats it as a valid action,
+so every `match` or `if` must special-case it.
+
+### After: Null represents absence honestly
+
+```python
+from typing import Literal
+
+from pydantic import BaseModel
+
+PendingAction = Literal["confirm-address", "select-shipping"]
+
+
+class OrderState(BaseModel):
+    pending_action: PendingAction | None = None
+```
+
+`None` forces the caller to handle the absent case explicitly. No sentinel can sneak through
+the system pretending to be meaningful data.
+
+---
+
+## 22. Grab-Bag Models
+
+### Before: Twenty optional fields
+
+```python
+from pydantic import BaseModel
+
+
+class UserProfile(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    company: str | None = None
+    job_title: str | None = None
+    billing_address: str | None = None
+    card_last4: str | None = None
+    # ... more
+```
+
+Every consumer does `profile.first_name or defaults.first_name` for each field. No guarantee
+that related fields are present together.
+
+### After: Phased composition — check one optional instead of eight
+
+```python
+from pydantic import BaseModel
+
+
+class Identity(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+
+
+class Billing(BaseModel):
+    address: str
+    card_last4: str
+
+
+class UserProfile(BaseModel):
+    identity: Identity | None = None
+    billing: Billing | None = None
+```
+
+When `identity` exists, all its fields are guaranteed present. One `if profile.identity:`
+replaces eight individual checks.
+
+---
+
+## 23. Unbranded Primitives
+
+### Before: Type aliases that don't protect
+
+```python
+UserId = str
+TeamId = str
+
+
+def get_team_members(team_id: TeamId) -> list[UserId]:
+    ...
+
+# Passes type checking — but is logically wrong
+get_team_members(some_user_id)
+```
+
+A function accepting `TeamId` will happily take a `UserId` because both are `str`.
+
+### After: NewType creates distinct types for static analysis
+
+```python
+from typing import NewType
+
+UserId = NewType("UserId", str)
+TeamId = NewType("TeamId", str)
+
+
+def get_team_members(team_id: TeamId) -> list[UserId]:
+    ...
+
+# mypy/pyright will flag this as an error
+get_team_members(some_user_id)  # error: expected TeamId, got UserId
+```
+
+Zero runtime cost. The distinction exists only for static checkers, which is exactly where
+this class of bug is caught.
+
+---
+
+## 24. Ambiguous Mutation Contract
+
+### Before: Mutates AND returns the same reference
+
+```python
+from pydantic import BaseModel
+
+
+class AppState(BaseModel):
+    model_config = {"frozen": False}
+    pending_action: str | None = None
+    counter: int = 0
+
+
+def with_pending_action(state: AppState, action: str) -> AppState:
+    state.pending_action = action
+    return state
+```
+
+Callers cannot tell whether to use the return value or the original. Both refer to the same
+mutated object, which silently breaks any code holding a reference to the "old" state.
+
+### After: Pick one contract
+
+```python
+# Option A: mutate, return None
+def apply_pending_action(state: AppState, action: str) -> None:
+    state.pending_action = action
+
+
+# Option B: clone, return new (Pydantic)
+def with_pending_action(state: AppState, action: str) -> AppState:
+    return state.model_copy(update={"pending_action": action})
+```
+
+Option A says "I changed your object." Option B says "Here's a new object." Neither is
+ambiguous. For Pydantic models, `model_copy(update={...})` is the idiomatic clone-and-modify.
+
+---
+
+## 25. Unscoped Mutable State
+
+### Before: Mutable state visible to the whole class
+
+```python
+import threading
+
+
+class Writer:
+    def __init__(self) -> None:
+        self._pending_text: str = ""
+        self._debounce_timeout: threading.Timer | None = None
+
+    def queue_send(self, text: str) -> None:
+        self._pending_text = text
+        if self._debounce_timeout:
+            self._debounce_timeout.cancel()
+        self._debounce_timeout = threading.Timer(0.3, self._flush)
+        self._debounce_timeout.start()
+
+    def flush_now(self) -> None:
+        if self._debounce_timeout:
+            self._debounce_timeout.cancel()
+            self._debounce_timeout = None
+        self._flush()
+
+    def something_else(self) -> None:
+        # can also touch self._debounce_timeout — nothing prevents it
+        ...
+
+    def _flush(self) -> None:
+        self._debounce_timeout = None
+        # send self._pending_text ...
+```
+
+Every method on the class can read and write `_debounce_timeout`. The scope of possible
+mutation is the entire class — if the timer is in a bad state, the bug could be in any method.
+
+### After: Same Writer, timer trapped in a closure
+
+```python
+import threading
+import types
+from collections.abc import Callable
+
+
+def _create_debouncer(callback: Callable[[], None], delay_seconds: float = 0.3):
+    """Timer state is trapped — only trigger() and clear() can touch it."""
+    timer: threading.Timer | None = None
+
+    def trigger() -> None:
+        nonlocal timer
+        if timer:
+            timer.cancel()
+
+        def _fire():
+            nonlocal timer
+            timer = None
+            callback()
+
+        timer = threading.Timer(delay_seconds, _fire)
+        timer.start()
+
+    def clear() -> None:
+        nonlocal timer
+        if timer:
+            timer.cancel()
+            timer = None
+
+    return types.SimpleNamespace(trigger=trigger, clear=clear)
+
+
+class Writer:
+    def __init__(self) -> None:
+        self._pending_text: str = ""
+        self._debouncer = _create_debouncer(self._flush)
+
+    def queue_send(self, text: str) -> None:
+        self._pending_text = text
+        self._debouncer.trigger()
+
+    def flush_now(self) -> None:
+        self._debouncer.clear()
+        self._flush()
+
+    def something_else(self) -> None:
+        # cannot touch the timer — it's trapped inside _debouncer
+        ...
+
+    def _flush(self) -> None:
+        # send self._pending_text ...
+        ...
+```
+
+Same `Writer`, same behavior. But `something_else` physically cannot touch the timer. The
+scope of possible mutation is exactly two functions — `trigger` and `clear` — not the entire
+class. Debugging is contained.
+
+---
+
+## Review Checklist
+
+When reviewing code (yours or an agent's), run through these checks:
+
+**Architecture & boundaries**
+- [ ] Is business logic entangled with I/O? Separate into pure core and thin shell. (#1)
+- [ ] Does core logic import `os`, `requests`, or framework modules? Extract infrastructure. (#2)
+- [ ] Do framework types (HTTP requests, ORM rows) leak into domain logic? Convert at the boundary. (#3)
+- [ ] Does a class straddle two abstraction levels? Split it. (#1)
+
+**Interfaces & APIs**
+- [ ] Is the interface as complex as the implementation? Deepen the module or remove the wrapper. (#4)
+- [ ] Does `__init__` perform I/O or network calls? Move work to methods. (#5)
+- [ ] Are per-call arguments crammed into `__init__`? Move them to method parameters. (#6)
+- [ ] Does a method secretly depend on prior calls or hidden instance state? Declare what it needs. (#7)
+- [ ] Does any function take four or more arguments? Bundle related params into a dataclass. (#8)
+- [ ] Do optional params create hidden behavioral branches? Split into separate functions. (#9)
+- [ ] Does any function both mutate its input and return it? Pick one contract. (#24)
+
+**State & type design**
+- [ ] Do any models allow field combinations that should be impossible? Discriminated union. (#20)
+- [ ] Are there sentinel values (`'none'`, `'unknown'`, `-1`) where `None` would work? Use null. (#21)
+- [ ] Does a model have many optional fields that are valid only in groups? Phased composition. (#22)
+- [ ] Are there identical type aliases for different domain concepts? Brand with `NewType`. (#23)
+- [ ] Are there dead type variants never constructed? Delete them. (#20)
+
+**Code structure**
+- [ ] Can any new field be derived from existing state? Derive it. (#19)
+- [ ] Is mutable state visible beyond its minimal scope? Trap it in a closure. (#25)
+- [ ] Are there nested conditionals three levels deep? Flatten with guard clauses, tables, or polymorphism. (#10)
+- [ ] Does a "calculate" function also write to a database or send email? Separate calculation from action. (#11)
+- [ ] Must methods be called in a specific undocumented order? Make data flow explicit. (#12)
+- [ ] Is there an ABC or Protocol with only one implementation? Delete it; abstract when a second type appears. (#13)
+- [ ] Is there an if-chain where every branch returns a similar shape? Make it a table. (#10)
+
+**Error handling, config & logging**
+- [ ] Are exceptions caught and swallowed in core logic? Let them propagate to the shell. (#14)
+- [ ] Do classes read `os.environ` themselves? Load config once at the edge, pass it in. (#15)
+- [ ] Does core logic import `logging`? Return rich result types; let the shell log. (#16)
+
+**Async & naming**
+- [ ] Is pure logic marked `async` because its caller is? Have the shell await data first. (#17)
+- [ ] Are there vague names like `Manager`, `process`, `data_list`? Name for intent, not type. (#18)
