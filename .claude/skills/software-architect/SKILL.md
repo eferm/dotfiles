@@ -232,6 +232,7 @@ each state carries exactly the fields it needs. This eliminates impossible field
 at the type level — no runtime checks needed.
 
 ```python
+from datetime import datetime
 from typing import Annotated, Literal, Union
 from pydantic import BaseModel, Discriminator
 
@@ -240,8 +241,8 @@ class PaymentStateBad(BaseModel):
     status: Literal["idle", "processing", "settled"]
     gateway: Literal["stripe", "paypal"] | None = None
     transaction_id: str | None = None
-    initiated_at: str | None = None
-    settled_at: str | None = None
+    initiated_at: datetime | None = None
+    settled_at: datetime | None = None
 
 # Good: each status carries exactly the fields it needs.
 class IdlePayment(BaseModel):
@@ -251,13 +252,13 @@ class ProcessingPayment(BaseModel):
     status: Literal["processing"] = "processing"
     gateway: Literal["stripe", "paypal"]
     transaction_id: str
-    initiated_at: str
+    initiated_at: datetime
 
 class SettledPayment(BaseModel):
     status: Literal["settled"] = "settled"
     gateway: Literal["stripe", "paypal"]
     transaction_id: str
-    settled_at: str
+    settled_at: datetime
 
 PaymentState = Annotated[
     Union[IdlePayment, ProcessingPayment, SettledPayment],
@@ -273,10 +274,10 @@ explicitly rather than letting a sentinel sneak through as if it were meaningful
 
 ```python
 # Bad: 'none' is not an action — it is the absence of one.
-PendingAction = Literal["none", "confirm-address", "select-shipping"]
+PendingAction = Literal["none", "confirm_address", "select_shipping"]
 
 # Good
-PendingAction = Literal["confirm-address", "select-shipping"]
+PendingAction = Literal["confirm_address", "select_shipping"]
 
 class OrderState(BaseModel):
     pending_action: PendingAction | None = None
@@ -313,6 +314,28 @@ class UserProfile(BaseModel):
     billing: Billing | None = None
 ```
 
+### Compose independent concepts, don't merge
+
+Even when two models are always used together, keep them as separate types if they represent
+independent domain concepts. Compose them in a wrapper rather than flattening one into the
+other — flattening obscures which fields belong to which concept and makes it harder to use
+either model independently later.
+
+```python
+# Bad: workspace fields flattened into user
+class UserWithWorkspace(BaseModel):
+    user_id: str
+    user_name: str
+    workspace_id: str
+    workspace_name: str
+    workspace_plan: str
+
+# Good: independent concepts composed, not merged
+class UserInWorkspace(BaseModel):
+    user: User
+    workspace: Workspace
+```
+
 ### Brand identical primitives
 
 When two concepts share the same underlying type (both are `str`), use `NewType` to prevent
@@ -335,6 +358,14 @@ TeamId = NewType("TeamId", str)
 If a type has a variant that is never constructed anywhere in the codebase, delete it. An
 unused variant misleads readers into thinking a lifecycle or code path exists when it does not.
 
+### Watch for drift
+
+Types and functions degrade in predictable ways. A model starts focused, then someone adds
+"just one more" optional field because it's easier than creating a new model, and eventually
+it's a loose bag of half-related data. A pure function quietly gains a side effect for
+convenience, and now every callsite inherits behavior it didn't ask for. When reviewing code,
+watch for these patterns — they're the early signs of the anti-patterns above taking hold.
+
 ---
 
 ## Part 4: Code Structure
@@ -347,7 +378,8 @@ boolean is a sync obligation — a place where the stored value can drift from t
 
 When you cannot derive (genuine state machines, temporal data, or when the derivation would be
 more complex than the stored value), encapsulate the mutable state in the smallest possible
-scope. A closure is better than a class field — nothing outside it can create inconsistency.
+scope. A small, focused class with a narrow public interface is better than a sprawling class
+field visible to every method — nothing outside the encapsulation can create inconsistency.
 
 The debugging payoff: derived state means data-in, answer-out testing. No mocking, no timing
 reproduction. The bug is in the source data or in the pure derivation function.

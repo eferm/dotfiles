@@ -996,16 +996,18 @@ exist in an invalid shape, no code anywhere needs to check for one.
 ### Before: Optional fields that allow impossible states
 
 ```python
-from pydantic import BaseModel
+from datetime import datetime
 from typing import Literal
+
+from pydantic import BaseModel
 
 
 class PaymentState(BaseModel):
     status: Literal["idle", "processing", "settled"]
     gateway: Literal["stripe", "paypal"] | None = None
     transaction_id: str | None = None
-    initiated_at: str | None = None
-    settled_at: str | None = None
+    initiated_at: datetime | None = None
+    settled_at: datetime | None = None
 ```
 
 When `status` is `'idle'`, should `gateway` or `transaction_id` exist? The type doesn't say.
@@ -1016,6 +1018,7 @@ check, or silently produce wrong answers.
 ### After: Discriminated union — each state carries exactly its fields
 
 ```python
+from datetime import datetime
 from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, Discriminator
@@ -1029,14 +1032,14 @@ class ProcessingPayment(BaseModel):
     status: Literal["processing"] = "processing"
     gateway: Literal["stripe", "paypal"]
     transaction_id: str
-    initiated_at: str
+    initiated_at: datetime
 
 
 class SettledPayment(BaseModel):
     status: Literal["settled"] = "settled"
     gateway: Literal["stripe", "paypal"]
     transaction_id: str
-    settled_at: str
+    settled_at: datetime
 
 
 PaymentState = Annotated[
@@ -1058,7 +1061,7 @@ checks needed — the impossible state was never created.
 ```python
 from typing import Literal
 
-PendingAction = Literal["none", "confirm-address", "select-shipping"]
+PendingAction = Literal["none", "confirm_address", "select_shipping"]
 ```
 
 `'none'` is not an action — it is the absence of one. But the type treats it as a valid action,
@@ -1071,7 +1074,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-PendingAction = Literal["confirm-address", "select-shipping"]
+PendingAction = Literal["confirm_address", "select_shipping"]
 
 
 class OrderState(BaseModel):
@@ -1181,7 +1184,6 @@ from pydantic import BaseModel
 
 
 class AppState(BaseModel):
-    model_config = {"frozen": False}
     pending_action: str | None = None
     counter: int = 0
 
@@ -1250,44 +1252,41 @@ class Writer:
 Every method on the class can read and write `_debounce_timeout`. The scope of possible
 mutation is the entire class — if the timer is in a bad state, the bug could be in any method.
 
-### After: Same Writer, timer trapped in a closure
+### After: Same Writer, timer encapsulated in a small class
 
 ```python
 import threading
-import types
 from collections.abc import Callable
 
 
-def _create_debouncer(callback: Callable[[], None], delay_seconds: float = 0.3):
-    """Timer state is trapped — only trigger() and clear() can touch it."""
-    timer: threading.Timer | None = None
+class _Debouncer:
+    """Timer state is encapsulated — only trigger() and clear() can touch it."""
 
-    def trigger() -> None:
-        nonlocal timer
-        if timer:
-            timer.cancel()
+    def __init__(self, callback: Callable[[], None], delay_seconds: float = 0.3):
+        self._timer: threading.Timer | None = None
+        self._callback = callback
+        self._delay_seconds = delay_seconds
 
-        def _fire():
-            nonlocal timer
-            timer = None
-            callback()
+    def trigger(self) -> None:
+        if self._timer:
+            self._timer.cancel()
+        self._timer = threading.Timer(self._delay_seconds, self._fire)
+        self._timer.start()
 
-        timer = threading.Timer(delay_seconds, _fire)
-        timer.start()
+    def clear(self) -> None:
+        if self._timer:
+            self._timer.cancel()
+            self._timer = None
 
-    def clear() -> None:
-        nonlocal timer
-        if timer:
-            timer.cancel()
-            timer = None
-
-    return types.SimpleNamespace(trigger=trigger, clear=clear)
+    def _fire(self) -> None:
+        self._timer = None
+        self._callback()
 
 
 class Writer:
     def __init__(self) -> None:
         self._pending_text: str = ""
-        self._debouncer = _create_debouncer(self._flush)
+        self._debouncer = _Debouncer(self._flush)
 
     def queue_send(self, text: str) -> None:
         self._pending_text = text
@@ -1298,7 +1297,7 @@ class Writer:
         self._flush()
 
     def something_else(self) -> None:
-        # cannot touch the timer — it's trapped inside _debouncer
+        # cannot touch the timer — it's inside _debouncer
         ...
 
     def _flush(self) -> None:
@@ -1306,9 +1305,9 @@ class Writer:
         ...
 ```
 
-Same `Writer`, same behavior. But `something_else` physically cannot touch the timer. The
-scope of possible mutation is exactly two functions — `trigger` and `clear` — not the entire
-class. Debugging is contained.
+Same `Writer`, same behavior. But `something_else` cannot touch the timer — it's encapsulated
+inside `_Debouncer`, whose public interface is just `trigger()` and `clear()`. The scope of
+possible mutation is one small class, not the entire `Writer`.
 
 ---
 
@@ -1340,7 +1339,7 @@ When reviewing code (yours or an agent's), run through these checks:
 
 **Code structure**
 - [ ] Can any new field be derived from existing state? Derive it. (#19)
-- [ ] Is mutable state visible beyond its minimal scope? Trap it in a closure. (#25)
+- [ ] Is mutable state visible beyond its minimal scope? Encapsulate it in a small class. (#25)
 - [ ] Are there nested conditionals three levels deep? Flatten with guard clauses, tables, or polymorphism. (#10)
 - [ ] Does a "calculate" function also write to a database or send email? Separate calculation from action. (#11)
 - [ ] Must methods be called in a specific undocumented order? Make data flow explicit. (#12)
