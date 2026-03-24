@@ -17,8 +17,10 @@
       "Read",
       "WebFetch",
       "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:files.pythonhosted.org)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:lfs.github.com)",
+      "WebFetch(domain:pypi.org)",
       "WebSearch",
       "Write(/private/tmp/**)",
       "Write(/tmp/**)"
@@ -35,6 +37,10 @@
       "Bash(find * -delete)",
       "Bash(git reset --hard *)",
       "Bash(npm publish *)",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+      "Bash(python *)",
+      "Bash(python3 *)",
       "Bash(rm -rf *)",
       "Bash(wget * | *)"
     ]
