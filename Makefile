@@ -1,5 +1,7 @@
 # Bootstrap a new macOS machine — see README.md for setup instructions
 
+export PATH := /opt/homebrew/bin:$(PATH)
+
 TIMESTAMP := $(shell date +%Y%m%d%H%M%S)
 
 .PHONY: default
@@ -23,20 +25,17 @@ all: install seed lfs check
 	@echo "Restart your terminal to pick up .zshrc changes."
 	@echo "Open nvim to let Lazy install plugins."
 
-# https://brew.sh
-# https://github.com/Homebrew/homebrew-bundle
-BREW := /opt/homebrew/bin/brew
-
+# https://brew.sh — https://github.com/Homebrew/homebrew-bundle
 .PHONY: install
 install:
-	@if ! command -v brew &>/dev/null; then \
+	@if ! command -v brew >/dev/null 2>&1; then \
 		/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
 	else \
 		echo "OK: Homebrew already installed"; \
 	fi
-	$(BREW) update
-	$(BREW) bundle --file=$(HOME)/Brewfile
-	@if command -v claude &>/dev/null; then \
+	brew update
+	brew bundle --file="$(HOME)/Brewfile"
+	@if command -v claude >/dev/null 2>&1; then \
 		echo "OK: Claude Code already installed"; \
 	else \
 		curl -fsSL https://claude.ai/install.sh | bash; \
@@ -53,7 +52,7 @@ seed-ssh:
 	elif [ -f "$(HOME)/.ssh/config" ]; then \
 		{ echo 'Include config.default'; echo ''; cat "$(HOME)/.ssh/config"; \
 		} > "$(HOME)/.ssh/config.tmp" && \
-		mv "$(HOME)/.ssh/config.tmp" "$(HOME)/.ssh/config"; \
+		mv "$(HOME)/.ssh/config.tmp" "$(HOME)/.ssh/config" && \
 		echo "OK: prepended Include to existing ~/.ssh/config"; \
 	else \
 		echo 'Include config.default' > "$(HOME)/.ssh/config"; \
@@ -72,7 +71,7 @@ seed-git:
 			''; \
 		cat "$(HOME)/.config/git/config"; \
 		} > "$(HOME)/.config/git/config.tmp" && \
-		mv "$(HOME)/.config/git/config.tmp" "$(HOME)/.config/git/config"; \
+		mv "$(HOME)/.config/git/config.tmp" "$(HOME)/.config/git/config" && \
 		echo "OK: prepended include to existing ~/.config/git/config"; \
 	else \
 		printf '%s\n' \
@@ -98,7 +97,7 @@ seed-zsh:
 	elif [ -f "$(HOME)/.zshrc" ]; then \
 		{ echo 'source ~/.zshrc.default'; echo ''; cat "$(HOME)/.zshrc"; \
 		} > "$(HOME)/.zshrc.tmp" && \
-		mv "$(HOME)/.zshrc.tmp" "$(HOME)/.zshrc"; \
+		mv "$(HOME)/.zshrc.tmp" "$(HOME)/.zshrc" && \
 		echo "OK: prepended source to existing ~/.zshrc"; \
 	else \
 		echo 'source ~/.zshrc.default' > "$(HOME)/.zshrc"; \
@@ -107,7 +106,7 @@ seed-zsh:
 
 .PHONY: lfs
 lfs:
-	PATH="/opt/homebrew/bin:$$PATH" git lfs install
+	git lfs install
 
 .PHONY: check
 check: check-ssh check-gpg check-git check-lfs
@@ -125,7 +124,7 @@ check-ssh:
 # https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key
 .PHONY: check-gpg
 check-gpg:
-	@if gpg --list-secret-keys --keyid-format=long 2>/dev/null | grep -q sec; then \
+	@if gpg --list-secret-keys --keyid-format=long 2>/dev/null | grep -q '^sec'; then \
 		echo "OK: GPG key found"; \
 	else \
 		echo "WARN: No GPG key found."; \
@@ -142,7 +141,7 @@ check-gpg:
 
 .PHONY: check-git
 check-git:
-	@if git config user.signingkey >/dev/null 2>&1; then \
+	@if git config --global user.signingkey >/dev/null 2>&1; then \
 		echo "OK: Git signing key configured"; \
 	else \
 		echo "WARN: No git signing key set. Run: gpg --list-secret-keys --keyid-format=long"; \
@@ -151,7 +150,7 @@ check-git:
 
 .PHONY: check-lfs
 check-lfs:
-	@if git config filter.lfs.clean >/dev/null 2>&1; then \
+	@if git config --global filter.lfs.clean >/dev/null 2>&1; then \
 		echo "OK: Git LFS configured"; \
 	else \
 		echo "WARN: Git LFS not configured. Run: make lfs"; \
