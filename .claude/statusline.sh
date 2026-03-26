@@ -29,13 +29,9 @@ cache_is_stale() {
   (( $(date +%s) - file_mtime > CACHE_MAX_AGE ))
 }
 
-# --- Read JSON from stdin ---
+# --- Read and parse JSON from stdin ---
 
-tmpfile=$(mktemp)
-trap 'rm -f "$tmpfile"' EXIT
-cat > "${tmpfile}"
-
-# --- Extract fields from JSON ---
+input=$(cat)
 
 IFS=$'\t' read -r cwd model_id used_pct context_size <<< "$(
   jq -r '[
@@ -43,8 +39,13 @@ IFS=$'\t' read -r cwd model_id used_pct context_size <<< "$(
     (.model.id // ""),
     (.context_window.used_percentage // 0 | floor | tostring),
     (.context_window.context_window_size // 200000 | tostring)
-  ] | join("\t")' "${tmpfile}"
-)"
+  ] | join("\t")' <<< "${input}"
+)" || { echo "statusline: jq failed" >&2; exit 1; }
+
+if [[ -z "${cwd}" ]]; then
+  echo "statusline: no data" >&2
+  exit 1
+fi
 
 # --- Left side: directory and git info ---
 
@@ -56,7 +57,8 @@ if cache_is_stale; then
   if git -C "${cwd}" rev-parse --git-dir >/dev/null 2>&1; then
     branch=$(git -C "${cwd}" --no-optional-locks branch --show-current 2>/dev/null \
       || git -C "${cwd}" --no-optional-locks rev-parse --short HEAD 2>/dev/null)
-    if [[ -n "$(git -C "${cwd}" --no-optional-locks status --porcelain 2>/dev/null)" ]]; then
+    porcelain=$(git -C "${cwd}" --no-optional-locks status --porcelain 2>/dev/null)
+    if [[ -n "${porcelain}" ]]; then
       dirty_flag="1"
     else
       dirty_flag="0"
