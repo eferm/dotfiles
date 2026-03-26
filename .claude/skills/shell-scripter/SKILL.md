@@ -1,19 +1,22 @@
 ---
-name: shell-programmer
+name: shell-scripter
 description: >
-  Best practices for writing readable, maintainable shell scripts based on the Google Shell
-  Style Guide and community standards. Provides a 7-dimension readability scoring framework,
-  idiomatic bash patterns, and a structured review workflow. Use this skill whenever Claude is
-  writing, reviewing, refactoring, or debugging shell scripts (.sh files, bash, zsh) — even if
-  the user doesn't mention "style" or "readability." Trigger for any shell script task: writing
-  new scripts, editing existing ones, reviewing PRs that touch shell code, fixing bugs in shell
+  Best practices for writing readable, maintainable shell scripts and designing agent-friendly
+  CLI interfaces. Based on the Google Shell Style Guide and community standards. Provides an
+  8-dimension readability scoring framework, idiomatic bash patterns, CLI interface design
+  principles, and a structured review workflow. Use this skill whenever Claude is writing,
+  reviewing, refactoring, or debugging shell scripts (.sh files, bash, zsh) — even if the user
+  doesn't mention "style" or "readability." Trigger for any shell script task: writing new
+  scripts, editing existing ones, reviewing PRs that touch shell code, fixing bugs in shell
   scripts, or converting one-liners into proper scripts. Also trigger when the user pastes shell
   code and asks for help, or when generating shell scripts as part of a larger task (Makefiles,
-  CI pipelines, git hooks, deployment scripts). Do NOT trigger for one-off shell commands typed
-  directly into a terminal, or for non-shell languages.
+  CI pipelines, git hooks, deployment scripts). Also trigger when the user is building a CLI
+  tool, designing command-line interfaces, structuring arguments/flags, or making scripts
+  invocable by agents or automation. Do NOT trigger for one-off shell commands typed directly
+  into a terminal, or for non-shell languages.
 ---
 
-# Shell Programmer
+# Shell Scripter
 
 This skill encodes shell scripting best practices drawn from the
 [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html),
@@ -26,11 +29,16 @@ value — correctness is a close second. Cleverness is not a value at all.
 Shell is the right tool for glue scripts under ~100 lines. Beyond that, consider Python or
 another structured language. Within that range, these principles help keep scripts clear.
 
+When a script becomes a tool that others invoke — whether humans, CI pipelines, or LLM
+agents — the *interface* matters as much as the internals. This guide also covers how to
+design CLI argument handling, help text, and output so that scripts work reliably in
+automated pipelines, not just when a human is at the keyboard.
+
 
 ## Readability Scoring Framework
 
-When reviewing or refactoring a shell script, assess it on these 7 dimensions (1–5 each,
-35 max). This framework is useful both for identifying what to fix and for communicating
+When reviewing or refactoring a shell script, assess it on these 8 dimensions (1–5 each,
+40 max). This framework is useful both for identifying what to fix and for communicating
 the impact of changes to the user.
 
 | # | Dimension | What a 5 looks like |
@@ -42,6 +50,7 @@ the impact of changes to the user.
 | 5 | **Formatting** | 2-space indentation, no tabs. Lines ≤ 80 characters. `[[ ]]` for conditionals (in bash), `(( ))` for arithmetic. `; then` and `; do` on the same line as their keyword. |
 | 6 | **DRY / No Dead Code** | No unused variables or extracted-but-never-read fields. No redundant assignments (`x="$y"; z="$x"` when `z="$y"` suffices). No parallel shadow variables. |
 | 7 | **Correctness** | No semantic anti-patterns. Logic handles empty/missing values where the data source is external. No subshell round-trips that could be avoided. |
+| 8 | **Interface** | All inputs accepted via flags (no interactive prompts required). `--help` includes examples for every subcommand. Actionable error messages on bad input. Destructive commands offer `--dry-run` and `--yes`. Output includes parseable data on success. Commands are idempotent where possible. |
 
 ### Using the framework
 
@@ -86,6 +95,194 @@ actually does* (main logic). Every forward reference is resolved by the time it'
 Executables should have a `.sh` extension or no extension. Libraries (sourced files) must
 have a `.sh` extension and should not be executable. This distinction tells the reader
 whether a file is meant to be run or sourced.
+
+
+## CLI Interface Design
+
+*Principles in this section draw from Eric Zakariasson's
+["Building CLIs for agents"](https://x.com/ericzakariasson/status/2036762680401223946).*
+
+When a shell script becomes a tool that others invoke — humans, CI pipelines, or LLM
+agents — the interface matters as much as the internals. Most CLIs were built assuming a
+human is at the keyboard, but agents can't press arrow keys, navigate interactive menus,
+or read between the lines of a wall of help text. Making the interface explicit and
+predictable helps everyone; it's essential for non-human callers.
+
+These principles apply to any script that accepts arguments or produces output consumed
+by other tools. Even a simple wrapper script benefits from clear flag handling and
+actionable errors.
+
+### Non-interactive by default
+
+Every input should be passable as a flag. Interactive prompts are fine as a fallback when
+flags are missing *and* stdin is a terminal, but the script must be fully operable without
+human interaction.
+
+```bash
+# Blocks an agent — no way to answer programmatically
+$ deploy.sh
+? Which environment? (use arrow keys)
+
+# Works for everyone
+$ deploy.sh --env staging
+```
+
+Use `getopts` or a `while` loop over `"$@"` to parse flags. If a required flag is
+missing, print the correct invocation to stderr and exit — don't drop into a prompt.
+
+```bash
+# Pattern for optional interactivity: prompt only if flag is absent AND terminal is attached
+if [[ -z "${env}" ]]; then
+  if [[ -t 0 ]]; then
+    read -rp "Environment (staging/production): " env
+  else
+    echo "Error: --env is required in non-interactive mode." >&2
+    echo "  Usage: deploy.sh --env <staging|production>" >&2
+    exit 1
+  fi
+fi
+```
+
+### Flags over positional arguments
+
+Prefer long flags (`--env`) over positional arguments. Positional args create invisible
+ordering requirements that break when someone rearranges a pipeline or adds a new
+parameter. Long flags are self-documenting and order-independent.
+
+```bash
+# Fragile — which is the env and which is the tag?
+$ deploy.sh staging v1.2.3
+
+# Self-documenting and order-independent
+$ deploy.sh --env staging --tag v1.2.3
+```
+
+Accept `--stdin` or `-` for data input when the content might come from a pipe. Agents
+and automation think in pipelines and want to chain commands:
+
+```bash
+cat config.json | mycli config import --stdin
+mycli deploy --env staging --tag "$(mycli build --output tag-only)"
+```
+
+### Progressive help discovery
+
+Don't dump all documentation at the top level. An agent runs `mycli`, sees subcommands,
+picks one, runs `mycli deploy --help`, and gets exactly what it needs — no wasted context
+on commands it won't use.
+
+Every subcommand gets a `--help`, and every `--help` includes concrete examples. Examples
+do most of the work — a caller pattern-matches off `mycli deploy --env staging --tag v1.2.3`
+faster than it parses a prose description.
+
+```text
+$ mycli deploy --help
+Deploy the application to a target environment.
+
+Options:
+  --env     Target environment (staging, production)  [required]
+  --tag     Image tag (default: latest)
+  --force   Skip confirmation prompt
+
+Examples:
+  mycli deploy --env staging
+  mycli deploy --env production --tag v1.2.3
+  mycli deploy --env staging --force
+```
+
+### Fail fast with actionable errors
+
+When a required flag is missing or input is invalid, exit immediately with a message that
+shows what went wrong and what the correct invocation looks like. Include enough context
+for the caller to self-correct — agents are good at fixing their invocation when given
+something specific to work with.
+
+```bash
+if [[ -z "${env}" ]]; then
+  echo "Error: --env is required." >&2
+  echo "  Usage: deploy.sh --env <staging|production> --tag <image-tag>" >&2
+  echo "  Available envs: staging, production" >&2
+  exit 1
+fi
+```
+
+Don't hang, don't prompt, don't print a generic "invalid arguments" — show what's wrong
+and what right looks like.
+
+### Predictable command structure
+
+If your tool has subcommands, pick a pattern and stick with it. `resource verb`
+(`service list`, `deploy create`, `config show`) or `verb resource` — either is fine,
+but be consistent. When a caller learns `mycli service list`, they should be able to
+guess `mycli deploy list` and `mycli config list` without reading the docs.
+
+### Idempotent commands
+
+Design commands so running them twice produces the same end state. Agents retry on
+timeouts, context loss, or partial failures. A second `deploy.sh --env staging --tag v1.2.3`
+should detect the existing state and report "already deployed, no-op" rather than
+creating a duplicate.
+
+```bash
+if is_already_deployed "${env}" "${tag}"; then
+  echo "Already deployed ${tag} to ${env}, no changes made." >&2
+  exit 0
+fi
+```
+
+This also makes scripts safer for humans — accidentally running something twice doesn't
+cause harm.
+
+### Safety flags for destructive actions
+
+For commands that modify state, delete resources, or deploy to production, provide:
+
+- **`--dry-run`** — preview what would happen without making changes. Callers can
+  validate the plan, then run it for real.
+- **`--yes` / `--force`** — skip confirmation prompts. Humans get "are you sure?" by
+  default; automated callers pass `--yes` to bypass it.
+
+```bash
+if [[ "${dry_run}" == "true" ]]; then
+  printf "Would deploy %s to %s\n" "${tag}" "${env}" >&2
+  printf "  - Stop %d running instances\n" "${instance_count}" >&2
+  printf "  - Pull image registry.io/app:%s\n" "${tag}" >&2
+  printf "  - Start %d new instances\n" "${instance_count}" >&2
+  echo "No changes made." >&2
+  exit 0
+fi
+
+if [[ "${force}" != "true" ]] && [[ -t 0 ]]; then
+  read -rp "Deploy ${tag} to ${env}? [y/N] " confirm
+  [[ "${confirm}" =~ ^[Yy] ]] || exit 1
+fi
+```
+
+### Structured output on success
+
+Return useful data, not just a success message. Include identifiers, URLs, and durations
+that downstream commands or agents can act on:
+
+```bash
+printf "deployed %s to %s\n" "${tag}" "${env}"
+printf "url: %s\n" "${url}"
+printf "deploy_id: %s\n" "${deploy_id}"
+printf "duration: %ss\n" "${duration}"
+```
+
+For machine consumption, consider a `--output json` flag that emits structured data
+instead of human-friendly text. This lets callers extract exactly what they need without
+fragile text parsing:
+
+```bash
+if [[ "${output_format}" == "json" ]]; then
+  printf '{"tag":"%s","env":"%s","url":"%s","deploy_id":"%s","duration":%d}\n' \
+    "${tag}" "${env}" "${url}" "${deploy_id}" "${duration}"
+else
+  printf "deployed %s to %s\nurl: %s\ndeploy_id: %s\nduration: %ss\n" \
+    "${tag}" "${env}" "${url}" "${deploy_id}" "${duration}"
+fi
+```
 
 
 ## Naming
@@ -389,6 +586,10 @@ correctness in ways that aren't always obvious:
 | `[ ] && X \|\| Y` for branching | `Y` runs when `X` fails, not when the test is false. | Use `if/else`. |
 | `rm *` / bare `*` globs | Filenames starting with `-` are interpreted as flags. `rm *` in a dir containing `-rf` deletes everything recursively. | Use `./*` to anchor the glob: `rm ./*` |
 | Aliases in scripts | Expand at definition time, not call time. `$RANDOM` in an alias is frozen; quoting is fragile; failures are silent. | Use functions. They handle arguments, expand at call time, and compose naturally. |
+| Interactive prompts as the only input path | Blocks automated callers completely. An agent can't navigate arrow-key menus or type "y" at the right moment. | Accept all input via flags. Fall back to prompts only when flags are absent *and* `[[ -t 0 ]]` (stdin is a terminal). |
+| Positional args for non-trivial CLIs | Invisible ordering requirements. `deploy staging v1.2.3` vs `deploy v1.2.3 staging` — which is right? Impossible to guess without reading docs. | Use long flags: `--env staging --tag v1.2.3`. Self-documenting and order-independent. |
+| Generic error messages | `"Error: invalid input"` gives the caller nothing to fix. Agents self-correct well when given specific guidance; generic messages force re-reading the help. | Show what's wrong and what right looks like: `"Error: --env is required. Usage: deploy.sh --env <staging\|production>"` |
+| Non-idempotent side effects | An agent that retries after a timeout may duplicate a deploy, double-create a resource, or send a message twice. | Check existing state before acting. Return early with a no-op message if the desired state already exists. |
 
 
 ## String Concatenation
@@ -413,12 +614,16 @@ sacrifices readability.
 When asked to review or refactor a shell script:
 
 1. **Read the entire script** before making any changes.
-2. **Score it** against the 7 dimensions. Note the 2–3 weakest areas.
+2. **Score it** against the 8 dimensions. Note the 2–3 weakest areas.
 3. **Run ShellCheck** (if available) to catch bugs and non-standard patterns that a
    human review might miss. ShellCheck is recommended for all scripts, large or small.
 4. **Identify dead code** — variables assigned but never read, functions defined but never
    called, fields extracted but never used.
-5. **Make changes**, prioritizing the lowest-scoring dimensions. Keep each change
+5. **Check the interface** (if the script is a CLI tool). Can it be run non-interactively?
+   Are required inputs available as flags? Does `--help` include examples? Do error
+   messages show the correct invocation? Are destructive commands guarded with
+   `--dry-run` and `--yes`?
+6. **Make changes**, prioritizing the lowest-scoring dimensions. Keep each change
    atomic and explainable.
-6. **Present before/after scores** with a short explanation of what moved each dimension.
-7. **List the specific changes** so the user can verify nothing broke.
+7. **Present before/after scores** with a short explanation of what moved each dimension.
+8. **List the specific changes** so the user can verify nothing broke.
