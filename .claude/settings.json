@@ -5,10 +5,37 @@
     "claude-md-management@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true
   },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "if": "Bash(bq:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq '{hookSpecificOutput: {hookEventName: \"PreToolUse\", updatedInput: (.tool_input | .command = \"CLOUDSDK_PROXY_TYPE=http \" + .command)}}'",
+            "statusMessage": "Fixing bq proxy..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "if": "Bash(gcloud:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq '{hookSpecificOutput: {hookEventName: \"PreToolUse\", updatedInput: (.tool_input | .command = \"env -u CLOUDSDK_PROXY_TYPE -u CLOUDSDK_PROXY_ADDRESS -u CLOUDSDK_PROXY_PORT \" + .command)}}'",
+            "statusMessage": "Fixing gcloud proxy..."
+          }
+        ]
+      }
+    ]
+  },
   "model": "opus[1m]",
   "permissions": {
     "allow": [
       "Bash(dbt:*)",
+      "Bash(gh api:*)",
       "Bash(gh pr:*)",
       "Bash(gh search:*)",
       "Bash(git:*)",
@@ -31,6 +58,7 @@
     "ask": [
       "Bash(curl * | *)",
       "Bash(gh pr create *)",
+      "Bash(gh repo create *)",
       "Bash(git push *)"
     ],
     "defaultMode": "acceptEdits",
@@ -54,9 +82,11 @@
     "enabled": true,
     "excludedCommands": [
       "dbt:*",
+      "gcloud:*",
       "gh:*",
       "git:*",
-      "uv:*"
+      "uv:*",
+      "uvx:*"
     ],
     "filesystem": {
       "allowWrite": [
