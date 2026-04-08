@@ -5,5 +5,6 @@
   "interfaceFontFamily": "Inter",
   "textFontFamily": "iA Writer Quattro S",
   "monospaceFontFamily": "Geist Mono",
-  "showRibbon": false
+  "showRibbon": false,
+  "theme": "system"
 }
