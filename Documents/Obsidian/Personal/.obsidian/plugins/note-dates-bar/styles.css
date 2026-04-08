@@ -3,7 +3,7 @@
 }
 
 .note-dates-bar {
-	padding: 4px 12px;
-	font-size: 11px;
+	font-size: 0.8em;
 	opacity: 0.6;
+	text-align: center;
 }
