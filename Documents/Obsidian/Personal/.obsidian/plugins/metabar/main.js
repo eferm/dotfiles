@@ -28,7 +28,7 @@ function updateBar(dom, state) {
 
 function createDatePanel(view) {
 	const dom = document.createElement("div");
-	dom.className = "note-dates-bar";
+	dom.className = "metabar";
 	updateBar(dom, view.state);
 	return {
 		top: true,
@@ -39,10 +39,10 @@ function createDatePanel(view) {
 	};
 }
 
-class NoteDatesBarPlugin extends Plugin {
+class MetaBarPlugin extends Plugin {
 	onload() {
 		this.registerEditorExtension(showPanel.of(createDatePanel));
 	}
 }
 
-module.exports = NoteDatesBarPlugin;
+module.exports = MetaBarPlugin;

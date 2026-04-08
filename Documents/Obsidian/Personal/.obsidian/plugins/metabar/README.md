@@ -1,4 +1,4 @@
-# Note Dates Bar
+# MetaBar
 
 Displays file creation and modification dates in a small bar above the editor.
 
