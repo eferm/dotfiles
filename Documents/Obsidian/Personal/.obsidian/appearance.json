@@ -1,5 +1,9 @@
 {
   "baseFontSize": 14,
   "translucency": false,
-  "cssTheme": "Tokyo Night"
+  "cssTheme": "Tokyo Night",
+  "interfaceFontFamily": "",
+  "textFontFamily": "iA Writer Quattro S",
+  "monospaceFontFamily": "Geist Mono",
+  "showRibbon": false
 }
