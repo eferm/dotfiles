@@ -4,6 +4,10 @@ export PATH := /opt/homebrew/bin:$(PATH)
 
 TIMESTAMP := $(shell date +%Y%m%d%H%M%S)
 
+SSH_CONFIG := $(HOME)/.ssh/config
+GIT_CONFIG := $(HOME)/.config/git/config
+ZSHRC      := $(HOME)/.zshrc
+
 .PHONY: default
 default: help
 
@@ -15,6 +19,7 @@ help:
 	@echo "  all        Run install, seed, lfs, check"
 	@echo "  install    Install Homebrew and packages"
 	@echo "  seed       Seed config files from defaults"
+	@echo "  lfs        Install Git LFS hooks"
 	@echo "  check      Verify SSH key, GPG key, Git signing key"
 	@echo "  clean      Back up config files and re-seed"
 
@@ -32,8 +37,8 @@ install:
 		/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
 	else \
 		echo "OK: Homebrew already installed"; \
+		brew update; \
 	fi
-	brew update
 	brew bundle --file="$(HOME)/Brewfile"
 	@if command -v claude >/dev/null 2>&1; then \
 		echo "OK: Claude Code already installed"; \
@@ -44,35 +49,40 @@ install:
 .PHONY: seed
 seed: seed-ssh seed-git seed-zsh
 
+#   $(1) = file path, $(2) = line to include
+define ensure-include
+	@mkdir -p "$(dir $(1))"
+	@if [ -f "$(1)" ] && grep -qF '$(2)' "$(1)"; then \
+		echo "OK: $(1) includes $(2)"; \
+	elif [ -f "$(1)" ]; then \
+		{ printf '%s\n\n' '$(2)'; cat "$(1)"; \
+		} > "$(1).tmp" && \
+		mv "$(1).tmp" "$(1)" && \
+		echo "OK: prepended to existing $(1)"; \
+	else \
+		printf '%s\n' '$(2)' > "$(1)"; \
+		echo "OK: created $(1)"; \
+	fi
+endef
+
 .PHONY: seed-ssh
 seed-ssh:
-	@mkdir -p "$(HOME)/.ssh"
-	@if [ -f "$(HOME)/.ssh/config" ] && grep -q 'Include config.default' "$(HOME)/.ssh/config"; then \
-		echo "OK: ~/.ssh/config includes config.default"; \
-	elif [ -f "$(HOME)/.ssh/config" ]; then \
-		{ echo 'Include config.default'; echo ''; cat "$(HOME)/.ssh/config"; \
-		} > "$(HOME)/.ssh/config.tmp" && \
-		mv "$(HOME)/.ssh/config.tmp" "$(HOME)/.ssh/config" && \
-		echo "OK: prepended Include to existing ~/.ssh/config"; \
-	else \
-		echo 'Include config.default' > "$(HOME)/.ssh/config"; \
-		echo "OK: created ~/.ssh/config"; \
-	fi
+	$(call ensure-include,$(SSH_CONFIG),Include config.default)
 
 .PHONY: seed-git
 seed-git:
-	@mkdir -p "$(HOME)/.config/git"
-	@if [ -f "$(HOME)/.config/git/config" ] && grep -q 'path = config.default' "$(HOME)/.config/git/config"; then \
-		echo "OK: ~/.config/git/config includes config.default"; \
-	elif [ -f "$(HOME)/.config/git/config" ]; then \
+	@mkdir -p "$(dir $(GIT_CONFIG))"
+	@if [ -f "$(GIT_CONFIG)" ] && grep -qF 'path = config.default' "$(GIT_CONFIG)"; then \
+		echo "OK: $(GIT_CONFIG) includes config.default"; \
+	elif [ -f "$(GIT_CONFIG)" ]; then \
 		{ printf '%s\n' \
 			'[include]' \
 			'	path = config.default' \
 			''; \
-		cat "$(HOME)/.config/git/config"; \
-		} > "$(HOME)/.config/git/config.tmp" && \
-		mv "$(HOME)/.config/git/config.tmp" "$(HOME)/.config/git/config" && \
-		echo "OK: prepended include to existing ~/.config/git/config"; \
+		cat "$(GIT_CONFIG)"; \
+		} > "$(GIT_CONFIG).tmp" && \
+		mv "$(GIT_CONFIG).tmp" "$(GIT_CONFIG)" && \
+		echo "OK: prepended include to existing $(GIT_CONFIG)"; \
 	else \
 		printf '%s\n' \
 			'[include]' \
@@ -86,23 +96,13 @@ seed-git:
 			';	gpgSign = true' \
 			'; [includeIf "gitdir:~/Code/Org/"]' \
 			';	path = ~/Code/Org/.gitconfig' \
-			> "$(HOME)/.config/git/config"; \
-		echo "OK: created ~/.config/git/config"; \
+			> "$(GIT_CONFIG)"; \
+		echo "OK: created $(GIT_CONFIG)"; \
 	fi
 
 .PHONY: seed-zsh
 seed-zsh:
-	@if [ -f "$(HOME)/.zshrc" ] && grep -q 'source ~/.zshrc.default' "$(HOME)/.zshrc"; then \
-		echo "OK: ~/.zshrc sources .zshrc.default"; \
-	elif [ -f "$(HOME)/.zshrc" ]; then \
-		{ echo 'source ~/.zshrc.default'; echo ''; cat "$(HOME)/.zshrc"; \
-		} > "$(HOME)/.zshrc.tmp" && \
-		mv "$(HOME)/.zshrc.tmp" "$(HOME)/.zshrc" && \
-		echo "OK: prepended source to existing ~/.zshrc"; \
-	else \
-		echo 'source ~/.zshrc.default' > "$(HOME)/.zshrc"; \
-		echo "OK: created ~/.zshrc"; \
-	fi
+	$(call ensure-include,$(ZSHRC),source ~/.zshrc.default)
 
 .PHONY: lfs
 lfs:
@@ -158,8 +158,11 @@ check-lfs:
 
 .PHONY: clean
 clean:
+	@printf "Back up and re-seed ~/.ssh/config, ~/.config/git/config, ~/.zshrc? [y/N] "; \
+		read ans; \
+		case "$$ans" in [yY]) ;; *) echo "Aborted."; exit 1; esac
 	@echo "Backing up configs..."
-	@for f in "$(HOME)/.ssh/config" "$(HOME)/.config/git/config" "$(HOME)/.zshrc"; do \
+	@for f in "$(SSH_CONFIG)" "$(GIT_CONFIG)" "$(ZSHRC)"; do \
 		if [ -f "$$f" ]; then \
 			bak="$$f.bak.$(TIMESTAMP)"; \
 			mv "$$f" "$$bak"; \
