@@ -1,0 +1,9 @@
+.cm-panels-top {
+	border-bottom: none !important;
+}
+
+.note-dates-bar {
+	padding: 4px 12px;
+	font-size: 11px;
+	opacity: 0.6;
+}

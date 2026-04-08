@@ -1,0 +1,10 @@
+{
+	"id": "note-dates-bar",
+	"name": "Note Dates Bar",
+	"version": "0.1.0",
+	"minAppVersion": "0.15.0",
+	"description": "Displays file creation and modification dates in a small bar above the editor.",
+	"author": "Emanuel Ferm",
+	"authorUrl": "https://github.com/eferm",
+	"isDesktopOnly": false
+}
