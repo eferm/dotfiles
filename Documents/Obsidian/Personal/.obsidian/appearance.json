@@ -2,7 +2,7 @@
   "baseFontSize": 14,
   "translucency": false,
   "cssTheme": "Tokyo Night",
-  "interfaceFontFamily": "",
+  "interfaceFontFamily": "Inter",
   "textFontFamily": "iA Writer Quattro S",
   "monospaceFontFamily": "Geist Mono",
   "showRibbon": false
