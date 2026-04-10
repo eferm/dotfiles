@@ -4,7 +4,8 @@ description: >
   Applies deep software design principles when writing or reviewing substantial Python code.
   Covers: deep modules, minimal/no optional parameters, functional core with imperative shell,
   dependency inversion, separation of infrastructure from logic, state and type design,
-  mutation contracts, branch reduction, error handling at boundaries, typed configuration,
+  mutation contracts, branch reduction, error handling at boundaries, configuration,
+  resource lifecycle management, library boundaries (Pydantic vs dataclasses),
   structured module organization, naming conventions, and async patterns. Use this skill whenever
   Claude is asked to build, refactor, design, or review classes, modules, services, or multi-file
   systems — even if the user doesn't mention "design principles" or "architecture." Trigger for
@@ -525,6 +526,29 @@ The config dataclass is frozen because configuration should not change after sta
 component only needs one value from the config, pass that value directly — don't pass the
 whole config object and let the component rummage through it.
 
+### Don't wrap static values in classes
+
+If configuration values are static constants (URLs, selectors, intervals, resource names),
+use module-level constants. Don't create Pydantic models or dataclasses just to hold strings
+that never change and are never parsed from dynamic input. A `config.py` with plain constants
+is simpler and more honest than a frozen dataclass wrapping the same values.
+
+```python
+# Bad: class wrapper for static strings
+class AppConfig(BaseModel, frozen=True):
+    api_url: str = "https://api.example.com"
+    timeout: int = 30
+    max_retries: int = 3
+
+# Good: plain constants
+API_URL = "https://api.example.com"
+TIMEOUT = 30
+MAX_RETRIES = 3
+```
+
+Reserve typed config objects for values that come from dynamic sources (environment
+variables, files, user input) where validation adds value.
+
 ---
 
 ## Part 7: Logging
@@ -579,8 +603,9 @@ This makes logs searchable and parseable by observability tools.
 - **Constants**: `UPPER_SNAKE_CASE`. Name them for what they mean, not what they are:
   `MAX_RETRY_ATTEMPTS` not `THREE`.
 
-- **Private methods**: use a single leading underscore. If you need a double underscore, the
-  class is probably too large and should be split.
+- **No underscore prefixes**: use regular names for attributes, methods, and functions.
+  `self.page`, `resolve_channel()` — not `self._page`, `_resolve_channel()`. If a method
+  is internal, the module boundary and class scope already communicate that.
 
 - **Modules**: short, lowercase, descriptive. `orders.py`, `tax.py`, `notifications.py`.
   Avoid `utils.py` and `helpers.py` — they become dumping grounds. If something is utility-like,
@@ -632,6 +657,175 @@ class AsyncUserStore(Protocol):
     async def get(self, user_id: str) -> User: ...
     async def save(self, user: User) -> None: ...
 ```
+
+---
+
+## Part 10: Resource & Lifecycle Management
+
+### Use `with` for every resource that needs cleanup
+
+If an object has a `.close()`, `.stop()`, or `.aclose()` method, it should be opened with
+`with`. Never call `.close()` manually — it's easy to miss on error paths, and `with`
+handles it unconditionally.
+
+```python
+# Bad: manual close, missed on exception
+http = httpx.Client(...)
+try:
+    result = http.get("/data")
+finally:
+    http.close()
+
+# Good: context manager handles cleanup
+with httpx.Client(...) as http:
+    result = http.get("/data")
+```
+
+Multiple resources can share a single `with` block. Python closes them in reverse order:
+
+```python
+with (
+    sync_playwright() as pw,
+    httpx.Client(...) as http,
+    pw.chromium.launch() as browser,
+    browser.new_context() as context,
+):
+    page = context.new_page()
+    ...
+```
+
+For objects that have `.close()` but aren't native context managers, use
+`contextlib.closing()`.
+
+### Pass pre-created clients as dependencies
+
+The composition root creates all clients and resources, then passes them into the objects
+that use them. This means the root controls all lifecycles and cleanup ordering.
+
+```python
+# Bad: class creates its own client
+class SlackClient:
+    def __init__(self, token: str):
+        self.http = httpx.Client(headers={"Authorization": f"Bearer {token}"})
+
+# Good: client injected, lifecycle managed externally
+class SlackClient:
+    def __init__(self, http: httpx.Client, channel_id: str):
+        self.http = http
+        self.channel_id = channel_id
+```
+
+### Use `cached_property` instead of set-later instance vars
+
+Never create an instance variable in `__init__` as `None` and set it later in another method.
+This creates a "maybe initialized" state that every other method must handle. Use
+`@cached_property` for values that are expensive to compute and should be lazily evaluated.
+
+```python
+# Bad: set in __init__, populated later
+class Client:
+    def __init__(self, name: str):
+        self.name = name
+        self.channel_id: str | None = None  # set by resolve()
+
+    def resolve(self):
+        self.channel_id = lookup_channel(self.name)
+
+# Good: computed on first access, cached forever
+class Client:
+    def __init__(self, name: str):
+        self.name = name
+
+    @cached_property
+    def channel_id(self) -> str:
+        return lookup_channel(self.name)
+```
+
+### SIGINT and child processes
+
+When your Python process manages child processes (browsers, servers), Ctrl-C sends SIGINT to
+the entire process group. The child dies before Python can run `__exit__` methods, causing
+cleanup errors. Catch these at the outermost entry point:
+
+```python
+# __main__.py
+from playwright._impl._errors import TargetClosedError
+
+try:
+    main()
+except (KeyboardInterrupt, TargetClosedError):
+    pass
+```
+
+Don't use signal handlers to intercept SIGINT — they interfere with `time.sleep()` and make
+the process hang. Let SIGINT propagate naturally and catch the fallout at the top.
+
+### Separate lintable assets from Python
+
+Keep non-Python code (JavaScript, SQL, templates) in separate files that can be linted by
+their native toolchain. Load them at runtime:
+
+```python
+from importlib.resources import files
+from string import Template
+
+OBSERVER_JS = Template(
+    files("my_package").joinpath("observer.js").read_text()
+).substitute(selector=SELECTOR)
+```
+
+---
+
+## Part 11: Library Boundaries
+
+### Pydantic only at external JSON boundaries
+
+Use Pydantic `BaseModel` exclusively where you parse untrusted external data — API responses,
+webhook payloads, config files. For internal data passed between your own functions, use plain
+dataclasses or dicts. Pydantic adds validation overhead and import weight that internal data
+doesn't need.
+
+```python
+# Pydantic: parsing external Slack API response
+class SlackPostResponse(BaseModel):
+    ok: bool
+    error: str | None = None
+
+# Dataclass: internal data passed between your own code
+@dataclass
+class DialpadMessage:
+    sender: str
+    text: str
+    timestamp: str
+```
+
+If the only reason for a Pydantic model is to hold four fields and call `.model_dump()`,
+use a dict instead.
+
+### Docstrings describe what things are
+
+Write docstrings that describe purpose and behavior. Never describe what something is NOT
+("No I/O, no infrastructure imports") or why it changed from a previous version. If the
+reader needs to know what the function doesn't do, the function is probably misnamed.
+
+```python
+# Bad: defines by negation
+"""Pure message relay logic. No I/O, no infrastructure imports, testable with unit tests."""
+
+# Good: says what it does
+"""Message dedup and formatting logic."""
+```
+
+### Use absolute imports
+
+Prefer `from package.module import X` over relative imports `from .module import X`. Absolute
+imports are unambiguous, work the same regardless of how the module is invoked, and are
+required by some frameworks (Modal) that import modules directly.
+
+### Drop `from __future__ import annotations` on Python 3.12+
+
+PEP 604 union syntax (`str | None`) and PEP 585 generic syntax (`list[str]`) are native in
+3.10+. The `__future__` import is unnecessary noise on modern Python.
 
 ---
 

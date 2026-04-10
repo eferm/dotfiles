@@ -1311,6 +1311,142 @@ possible mutation is one small class, not the entire `Writer`.
 
 ---
 
+## 26. Manual Resource Cleanup
+
+### Before: Manual `.close()` calls
+
+```python
+def main():
+    pw = sync_playwright().start()
+    browser = pw.chromium.launch()
+    http = httpx.Client(...)
+    try:
+        # ... work ...
+    finally:
+        http.close()
+        browser.close()
+        pw.stop()
+```
+
+Closing order matters and is easy to get wrong. An exception between creation and `finally`
+leaks resources. Adding a new resource requires updating the `finally` block.
+
+### After: Context managers handle cleanup
+
+```python
+def main():
+    with (
+        sync_playwright() as pw,
+        httpx.Client(...) as http,
+        pw.chromium.launch() as browser,
+    ):
+        # ... work ...
+```
+
+Cleanup happens automatically in reverse order. Adding a resource is one line.
+
+---
+
+## 27. Set-Later Instance Variables
+
+### Before: Initialize as None, set in another method
+
+```python
+class Client:
+    def __init__(self, name: str):
+        self.name = name
+        self.channel_id: str | None = None
+
+    def resolve(self):
+        self.channel_id = lookup_channel(self.name)
+
+    def post(self, text: str):
+        # must remember to call resolve() first
+        http.post(f"/channels/{self.channel_id}/messages", ...)
+```
+
+Every method must handle the "not yet resolved" state or risk a `None` error.
+
+### After: `cached_property` computes on first access
+
+```python
+from functools import cached_property
+
+class Client:
+    def __init__(self, name: str):
+        self.name = name
+
+    @cached_property
+    def channel_id(self) -> str:
+        return lookup_channel(self.name)
+
+    def post(self, text: str):
+        http.post(f"/channels/{self.channel_id}/messages", ...)
+```
+
+No initialization order to remember. The value exists when you need it.
+
+---
+
+## 28. Config Wrapper Classes for Static Values
+
+### Before: Pydantic model wrapping constants
+
+```python
+class AppConfig(BaseModel, frozen=True):
+    api_url: str = "https://api.example.com"
+    timeout: int = 30
+    max_retries: int = 3
+
+config = AppConfig()
+```
+
+A class that holds three static strings. Nothing is parsed or validated.
+
+### After: Module-level constants
+
+```python
+API_URL = "https://api.example.com"
+TIMEOUT = 30
+MAX_RETRIES = 3
+```
+
+---
+
+## 29. Pydantic for Internal Data
+
+### Before: Pydantic model for data passed between your own functions
+
+```python
+class DialpadMessage(BaseModel, frozen=True):
+    sender: str
+    text: str
+    timestamp: str
+
+    @computed_field
+    @property
+    def message_id(self) -> str:
+        return hashlib.sha256(f"{self.sender}:{self.text}".encode()).hexdigest()[:16]
+```
+
+### After: Dataclass — no validation needed for internal data
+
+```python
+@dataclass
+class DialpadMessage:
+    sender: str
+    text: str
+    timestamp: str
+
+    @property
+    def message_id(self) -> str:
+        return hashlib.sha256(f"{self.sender}:{self.text}".encode()).hexdigest()[:16]
+```
+
+Reserve Pydantic for external JSON boundaries (API responses, webhook payloads).
+
+---
+
 ## Review Checklist
 
 When reviewing code (yours or an agent's), run through these checks:
@@ -1351,6 +1487,14 @@ When reviewing code (yours or an agent's), run through these checks:
 - [ ] Do classes read `os.environ` themselves? Load config once at the edge, pass it in. (#15)
 - [ ] Does core logic import `logging`? Return rich result types; let the shell log. (#16)
 
+**Resource & lifecycle management**
+- [ ] Are resources closed with manual `.close()` calls? Use `with` blocks. (#26)
+- [ ] Are instance vars initialized as `None` and set by a later method? Use `cached_property`. (#27)
+- [ ] Is a Pydantic model or dataclass wrapping static constants? Use module-level constants. (#28)
+- [ ] Is Pydantic used for internal data passed between your own functions? Use dataclasses. (#29)
+- [ ] Does a class create its own HTTP/DB client internally? Inject the client from outside. (#5, #26)
+
 **Async & naming**
 - [ ] Is pure logic marked `async` because its caller is? Have the shell await data first. (#17)
 - [ ] Are there vague names like `Manager`, `process`, `data_list`? Name for intent, not type. (#18)
+- [ ] Are there underscore-prefixed names? Use regular names. (#18)
