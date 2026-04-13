@@ -2,10 +2,12 @@
 name: software-architect
 description: >
   Applies deep software design principles when writing or reviewing substantial Python code.
-  Covers: deep modules, minimal/no optional parameters, functional core with imperative shell,
-  dependency inversion, separation of infrastructure from logic, state and type design,
-  mutation contracts, branch reduction, error handling at boundaries, configuration,
-  resource lifecycle management, library boundaries (Pydantic vs dataclasses),
+  Above all else, minimizes decision points (ifs, ternaries, defaults, short-circuits) by
+  pushing decisions into the type system — discriminated unions, polymorphism, dispatch
+  tables, strong required signatures. Also covers: deep modules, no optional parameters,
+  functional core with imperative shell, dependency inversion, separation of infrastructure
+  from logic, state and type design, mutation contracts, error handling at boundaries,
+  configuration, resource lifecycle management, library boundaries (Pydantic vs dataclasses),
   structured module organization, naming conventions, and async patterns. Use this skill whenever
   Claude is asked to build, refactor, design, or review classes, modules, services, or multi-file
   systems — even if the user doesn't mention "design principles" or "architecture." Trigger for
@@ -25,6 +27,41 @@ The goal is not to lecture about these ideas but to have them show up naturally 
 you write and the changes you suggest. These principles are Python-focused in their idioms but
 universal in their reasoning. Apply them with judgment — they are heuristics, not laws. The
 point is always clarity and reduced complexity, not dogmatic compliance.
+
+## Core commitment: minimize decision points
+
+Above all else, write code that minimizes the number of distinct paths through it. Every `if`,
+`elif`, ternary, `for`/`while`, `except`, `and`/`or` short-circuit, and every defaulted field
+or optional parameter is a decision point. Decision points compound: the theoretical path
+count through a function is on the order of `2^n` where `n` is the number of independent
+decisions. A function with twenty `if`s is not twice as complex as one with ten — its state
+space is a thousand times larger.
+
+Every other principle in this skill serves this commitment in some way. Functional core /
+imperative shell concentrates decisions at the edges. Discriminated unions absorb `isinstance`
+chains into the type system. Polymorphism replaces `elif` ladders with virtual dispatch. Deep
+modules hide branches behind narrow interfaces. "No optional parameters" is this rule at the
+function-signature level. Deriving from source data instead of storing flags eliminates the
+branches that keep the flags in sync.
+
+**Defaults and `if`s are the same decision modeled twice.** A field with a default value on a
+wide model says "this might be absent," and every reader of the field then either trusts the
+default or guards against it. Default count and branch count rise together. Collapsing a wide
+model-with-defaults into a discriminated union eliminates both at once — the guards don't
+merely get fewer, they go to zero.
+
+**When two designs are available, prefer the one with fewer branches — even if it means more
+types, more classes, or more up-front modeling.** Types are paid once, at modeling time.
+Branches are paid on every access. A module with 18 small classes and 6 `if`s is easier to
+hold in the head than one with 8 classes and 40 `if`s, because the branches multiply and the
+classes don't. When you face a design choice between adding a class and adding an `if`, add
+the class.
+
+This is a commitment, not a checklist. Not every `if` is wrong — guard clauses at module
+boundaries, genuinely different control flow, and early returns on unusual inputs all earn
+their keep. The rule is: every surviving branch should be doing load-bearing work that the
+type system genuinely cannot. If a branch is restating something the types already know, the
+types are too loose.
 
 **For extensive before/after examples of each principle, read `references/anti-patterns.md`.**
 **For module and package organization patterns, read `references/module-organization.md`.**
@@ -197,6 +234,10 @@ def format_order_summary(order: Order) -> str: ...
 If you genuinely cannot avoid a default, it should be for a value that is truly universal and
 whose absence would be surprising (e.g., `encoding="utf-8"`), not for toggling behavior.
 
+This is the function-signature form of the core commitment (see intro, and Part 4). Every
+default on a parameter is matched by at least one guard inside the function body. Splitting
+into two functions with narrower signatures eliminates both in one move.
+
 ### Pick a mutation contract
 
 If a function mutates its input, return `None`. If it returns a new value, clone first. Never
@@ -266,6 +307,12 @@ PaymentState = Annotated[
     Discriminator("status"),
 ]
 ```
+
+Discriminated unions are the single biggest branch-reduction tool in a typed codebase. The
+wide model above invites an `if status == "idle"`, `if gateway is not None`, `if
+initiated_at is not None` at every use site. The discriminated version replaces all of those
+with pattern matching or polymorphic dispatch that the type checker verifies exhaustively.
+Every `None` you remove from a type is a guard you never have to write.
 
 ### Null over sentinels
 
@@ -387,26 +434,77 @@ reproduction. The bug is in the source data or in the pure derivation function.
 
 ### Reduce branches
 
-Every conditional is a fork the reader must track. Aim for functions with a single path through
-them where possible.
+This is the skill's core commitment (see intro). Every conditional is a fork the reader must
+track, and forks compound. Count decisions before writing, not after — if the count is
+climbing, the shape is wrong.
 
-Strategies:
-- **Early returns for guard clauses.** Handle edge cases at the top and let the main logic
-  flow without nesting.
-- **Polymorphism over type-checking.** Instead of `if isinstance(x, A) ... elif isinstance(x, B)`,
-  give A and B a common Protocol and call the same method.
-- **Dictionaries over elif chains.** Map keys to behaviors rather than checking each one.
-- **Decompose compound conditions.** Give boolean expressions meaningful names via intermediate
-  variables or small functions.
+**What counts as a decision point.** Tally all of:
 
-A function with one `if` is readable. A function with nested `if/elif/else` three levels deep
-is a maintenance hazard.
+- `if`, `elif`, and comprehension `if` clauses
+- Ternary expressions (`x if cond else y`)
+- `for` / `while` loops
+- `except` clauses
+- `and` / `or` short-circuit operators
+- Every defaulted field on a model and every optional parameter on a function
 
-When a long if-chain returns a similar shape from every branch, the logic is a lookup table
-encoded as code. Convert it to a dictionary keyed by the discriminant — the function becomes
-`return TABLE.get(key)`. Adding a new case means adding a data entry, not a branch. Only keep
-branches as code when they involve genuinely different control flow, not just different return
-values.
+Cyclomatic complexity is `decisions + 1`. The theoretical upper bound on distinct paths is
+roughly `2^decisions`. Neither number is the whole story, but both move in the same direction:
+more decisions, more complexity, more cost at every read. When a function's decision count
+creeps toward a dozen, the problem is almost never fixable locally — it means an upstream
+type is too loose, and the function is paying the price on every access.
+
+**Strategies, in order of preference:**
+
+1. **Push the decision into the type.** This is the largest lever by far. A `str | None`
+   parameter with an `if x is None` guard becomes two functions with tighter signatures. A
+   wide model with fifteen optional fields and fifteen guards becomes a discriminated union
+   where each variant carries exactly what it needs, and the guards vanish. See Part 3.
+
+2. **Polymorphism over `isinstance` / type checks.** An `if isinstance(x, A) ... elif
+   isinstance(x, B)` chain is asking to be dispatched through a method on a common Protocol,
+   or through Pydantic's discriminated-union validation. The branch disappears into the type.
+
+3. **Dispatch tables over `elif` chains.** When every branch returns a similar shape computed
+   from the discriminant, the logic is a lookup table encoded as code. Convert it to a dict:
+   `TABLE.get(key)`. Adding a case is adding data, not a branch. Only keep branches as code
+   when they involve genuinely different control flow, not just different return values.
+
+4. **Early returns for guard clauses.** When a guard is unavoidable (boundary validation,
+   genuinely exceptional input), return early so the main path is unnested and flat.
+
+5. **Decompose compound conditions.** Boolean expressions with multiple `and`/`or` should be
+   named — an intermediate variable or small predicate function turns five short-circuits
+   into one read.
+
+**Defaults and `if`s are the same decision modeled twice.** A field with a default value
+(`uuid: str = ""`, `message: Message | None = None`) says "this might be absent," which
+then forces every reader of the field to either trust the default or guard against it.
+Default count and branch count rise together. Collapsing a wide model-with-defaults into a
+discriminated union often eliminates both in one move — the guards don't merely get fewer,
+they go to zero. See Part 3.
+
+**Prefer strong types at function signatures.** If a function signature accepts an optional
+or loosely-typed parameter, the function body must branch on it. Push the narrowing out to
+the caller (or to the type boundary where external data first enters the system), and the
+function body becomes straight-line code.
+
+**Classes are cheap; branches compound.** When facing a design choice between adding a type
+or class and adding an `if`, prefer the type. Types are paid once, at modeling time. Branches
+are paid on every access. A module with many small, sharply-typed classes and few branches
+is easier to hold in the head than a module with few loose classes and many branches, because
+decisions stack multiplicatively while types don't.
+
+**When in doubt, count.** A function with one `if` is readable. A function with nested
+`if/elif/else` three levels deep is a maintenance hazard. A function with ten sequential
+`if x: ...` guards is a signal that its input type is wrong — the guards are doing work the
+type should have done. If you find yourself adding the eighth guard, stop and reshape the
+input.
+
+**What this does not mean.** Not every `if` is wrong. A guard clause at a module boundary
+that rejects bad external input, an early return on a genuinely unusual state, or a branch
+that actually changes control flow (not just return values) all earn their keep. The rule
+is: every surviving branch should be doing load-bearing work that the type system genuinely
+cannot. If a branch is restating something the types already know, the types are too loose.
 
 ### Separate pure from impure (actions, calculations, data)
 
@@ -847,6 +945,13 @@ principles drove them.** Keep it concise — a few sentences or a short list. Fo
 structural choices: what was separated, what was pushed to the boundary, what was kept pure.
 If refactoring, call out specifically what changed and why. This helps the reader understand
 architectural intent without reverse-engineering it from the code.
+
+**For substantial work, also report decision-point counts** — `if`s, ternaries, loops,
+`except` clauses, `and`/`or` short-circuits, and defaulted fields/optional parameters.
+These numbers are the clearest single signal of where complexity lives. If a count is high,
+name the specific lever you'd pull to reduce it: which loose type could be tightened, which
+wide model could become a discriminated union, which `elif` chain could become a dispatch
+table. Don't just report the number — propose the reduction.
 
 ---
 

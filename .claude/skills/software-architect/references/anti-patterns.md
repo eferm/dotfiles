@@ -15,7 +15,7 @@ bad, and shows the corrected version.
 7. [Dishonest Methods](#7-dishonest-methods)
 8. [Too Many Parameters](#8-too-many-parameters)
 9. [Optional Parameter Abuse](#9-optional-parameter-abuse)
-10. [Branch Accumulation](#10-branch-accumulation)
+10. [Branch Accumulation](#10-branch-accumulation) (includes: nested conditionals, wide-model-with-defaults)
 11. [Mixed Pure and Impure](#11-mixed-pure-and-impure)
 12. [Accumulated State Between Calls](#12-accumulated-state)
 13. [Premature Abstraction](#13-premature-abstraction)
@@ -542,6 +542,90 @@ def calculate_shipping(order: Order) -> Decimal:
 
 The logic has one path with a simple loop. New weight tiers are added to the data table, not
 as new branches.
+
+### Before: Wide model with defaults forces a guard at every site
+
+A single loose model covering many record shapes. Every field is optional because "it depends
+on the record type." The consequences ripple out into every consumer.
+
+```python
+class Event(BaseModel):
+    type: str
+    uuid: str = ""
+    timestamp: str = ""
+    message: Message | None = None
+    session_id: str = ""
+    cwd: str = ""
+    is_sidechain: bool = False
+    custom_title: str = ""
+    worktree_name: str = ""
+
+def handle(event: Event) -> None:
+    if not event.uuid:
+        return                                  # guard 1
+    if event.is_sidechain:
+        return                                  # guard 2
+    if event.type not in ("user", "assistant"):
+        return                                  # guard 3
+    if not event.message:
+        return                                  # guard 4
+    if event.type == "user" and event.message.role == "user":
+        ...                                     # guard 5 (compound)
+    # every caller everywhere pays for the looseness of this one type
+```
+
+Nine defaults in the model produce at least five guards at every use site. The guards
+restate in code what the type is refusing to say: "user events have messages, worktree
+events have worktree_name, custom-title events have custom_title."
+
+### After: Discriminated union eliminates the guards entirely
+
+```python
+class UserEvent(BaseModel):
+    type: Literal["user"]
+    uuid: str
+    timestamp: datetime
+    message: UserMessage
+    session_id: str
+    cwd: str
+
+class AssistantEvent(BaseModel):
+    type: Literal["assistant"]
+    uuid: str
+    timestamp: datetime
+    message: AssistantMessage
+
+class WorktreeEvent(BaseModel):
+    type: Literal["worktree-state"]
+    worktree_name: str
+    cwd: str
+
+class CustomTitleEvent(BaseModel):
+    type: Literal["custom-title"]
+    custom_title: str
+
+Event = Annotated[
+    UserEvent | AssistantEvent | WorktreeEvent | CustomTitleEvent,
+    Field(discriminator="type"),
+]
+
+def handle(event: Event) -> None:
+    # No guards needed. Type-narrow by isinstance or pattern match, and every field
+    # the relevant branch touches is guaranteed present.
+    match event:
+        case UserEvent(message=msg):
+            render_user(msg)
+        case AssistantEvent(message=msg):
+            render_assistant(msg)
+        case WorktreeEvent() | CustomTitleEvent():
+            pass  # metadata-only; not rendered
+```
+
+The nine defaults are gone. The five guards are gone. The sidechain filter and "is this a
+renderable type" check happen at the boundary (where external JSON becomes `Event`), not on
+every consumer. Adding a new event type is a new class, not a new branch in every caller.
+
+This is the single biggest branch-reduction move available in a typed Python codebase.
 
 ---
 
