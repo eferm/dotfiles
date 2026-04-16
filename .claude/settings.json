@@ -8,6 +8,7 @@
     "skill-creator@claude-plugins-official": true
   },
   "env": {
+    "CLAUDE_CODE_NO_FLICKER": "1",
     "HTTPS_PROXY": "",
     "HTTP_PROXY": "",
     "http_proxy": "",
